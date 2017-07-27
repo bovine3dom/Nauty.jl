@@ -1,5 +1,4 @@
 # TODO:
-#   - fix 0 indexing (all S[i] -> S[i+1])
 #   - give variables sensible names
 #   - Figure out where it returns
 
@@ -11,7 +10,7 @@ function kavosh(G,k)
         # "Global" variable Visited
         Visited[u] = true
         # S are parents?
-        S[0] = u
+        S[1] = u
         Enumerate_Vertex(G,u,S,k-1,1)
         Visited[u] = false
     end
@@ -25,7 +24,7 @@ function Enumerate_Vertex(G,u,S,Remainder,i)
         return
     else
         # Find vertices that could be part of unique motifs
-        ValList = Validate(G,S[i-1],u)
+        ValList = Validate(G,S[i],u)
         # Make sure we don't try to pick more than we can
         n = min(length(ValList),Remainder)
         # Pick k nodes from our current depth
@@ -33,7 +32,7 @@ function Enumerate_Vertex(G,u,S,Remainder,i)
             C = Initial_Comb(ValList,k)
             while C != nothing
                 # Set the current selection at the current depth to them nodes
-                S[i] = C
+                S[i+1] = C
                 # and Remainder-k from other depths
                 Enumerate_Vertex(G,u,S,Remainder-k,i+1)
                 # Repeat for all combinations of k nodes at current depth
