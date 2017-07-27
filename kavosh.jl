@@ -1,42 +1,48 @@
 # TODO:
 #   - give variables sensible names
 #   - Figure out where it returns
+import LightGraphs
+const lg = LightGraphs
+import Combinatorics
+const cb = Combinatorics
 
 # Find all subgraphs of size k in G
 function kavosh(G,k)
-    Visited .= false
+    Visited = zeros(Bool,lg.nv(G))
+    S = Dict()
     # For each node u
-    for u in G
+    for u in lg.vertices(G)
         # "Global" variable Visited
+        Visited .= false
         Visited[u] = true
         # S are parents?
         S[1] = u
-        Enumerate_Vertex(G,u,S,k-1,1)
-        Visited[u] = false
+        Enumerate_Vertex(G,u,S,k-1,1,Visited)
     end
 end
 
 # Take graph, root vertex, "Selection": the vertices that are part of the current motif, the number of nodes left to choose
-function Enumerate_Vertex(G,u,S,Remainder,i)
+function Enumerate_Vertex(G,u,S,Remainder,i,Visited)
     # If there are no more nodes to choose, terminate
     if Remainder == 0
         # TBH, this should probably return S.
+        temp = filter(x -> x!=0,vcat(values(S)...))
+        # Rarely, nodes are repeated. Why?
+        arerepeats(temp) && println(S)
         return
     else
         # Find vertices that could be part of unique motifs
-        ValList = Validate(G,S[i],u)
+        ValList = Validate(G,S[i],u,Visited)
         # Make sure we don't try to pick more than we can
         n = min(length(ValList),Remainder)
         # Pick k nodes from our current depth
         for k = 1:n
-            C = Initial_Comb(ValList,k)
-            while C != nothing
+            for combination in cb.combinations(ValList,k)
                 # Set the current selection at the current depth to them nodes
-                S[i+1] = C
+                S[i+1] = combination
                 # and Remainder-k from other depths
-                Enumerate_Vertex(G,u,S,Remainder-k,i+1)
+                Enumerate_Vertex(G,u,S,Remainder-k,i+1,Visited)
                 # Repeat for all combinations of k nodes at current depth
-                Next_Comb(ValList,k)
             end
         end
         # Tidy up
@@ -46,15 +52,20 @@ function Enumerate_Vertex(G,u,S,Remainder,i)
     end
 end
 
+function arerepeats(array)
+    return length(array) != length(Set(array))
+end
+
 # Take graph, selected vertices of previous layer, and the root vertex, return vertices that could form unique motifs
 # This is the bit where the labels are considered. Only labels bigger than root are considered. This is to stop double counting.
-function Validate(G,Parents,u)
+function Validate(G,Parents,u,Visited)
     ValList = []
     # For all of the immediate neighbours of the parents
     for v in Parents
-        for w in Neighbour[u]
+        # Original paper has this as the neighbours of U. 90% sure that it's a typo.
+        for w in lg.neighbors(G,v)
             # If the label of the neighbour is greater than the parent, and the neighbour has not yet been visited,
-            if (label[u] < label[w]) && !Visited[w]
+            if (v < w) && !Visited[w]
                 # Mark it as visited and add it to our list of candidates
                 Visited[w] = true
                 push!(ValList, w)
