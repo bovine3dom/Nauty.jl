@@ -1,6 +1,9 @@
 # TODO:
 #   - give variables sensible names
 #   - Figure out where it returns
+#   - Multithreading...
+#       - Each root node is independent
+
 import LightGraphs
 const lg = LightGraphs
 import Combinatorics
@@ -9,9 +12,9 @@ const cb = Combinatorics
 # Find all subgraphs of size k in G
 function kavosh(G,k)
     Visited = zeros(Bool,lg.nv(G))
-    S = Dict()
     # For each node u
     for u in lg.vertices(G)
+        S = Dict()
         # "Global" variable Visited
         Visited .= false
         Visited[u] = true
@@ -27,7 +30,7 @@ function Enumerate_Vertex(G,u,S,Remainder,i,Visited)
     if Remainder == 0
         # TBH, this should probably return S.
         temp = filter(x -> x!=0,vcat(values(S)...))
-        # Rarely, nodes are repeated. Why?
+        # Rarely, nodes are repeated. Why? Fixed - S wasn't being wiped.
         arerepeats(temp) && println(S)
         return
     else
@@ -39,6 +42,7 @@ function Enumerate_Vertex(G,u,S,Remainder,i,Visited)
         for k = 1:n
             for combination in cb.combinations(ValList,k)
                 # Set the current selection at the current depth to them nodes
+                # Might get a performance boost if S was just a list of numbers, and Parents was stored separately.
                 S[i+1] = combination
                 # and Remainder-k from other depths
                 Enumerate_Vertex(G,u,S,Remainder-k,i+1,Visited)
