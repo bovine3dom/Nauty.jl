@@ -96,6 +96,7 @@ Take 2:
 
 ## Faffing
 - It's basically done at this point. Biologists like to do some stats.
+- It might actually be nice to do the z-score stuff / normalise by chance of appearing in random graph / some other sort of entropy thing
     
 # Pseudo code
 
@@ -140,3 +141,58 @@ Take 2:
         end
     end
     return ValList
+
+---
+
+# Nauty
+
+## Compilation
+
+- Apparently, setting MAXN <= WORDSIZE makes it much faster for tiny graphs
+    - (from nauty.h)
+
+- Make sure to configure with O4 and fPIC
+- then compile with gcc -shared -o -fPIC nauty.so nauty.o nauty.so nauty.o nautil.o nautinv.o naututil.o gtnauty.o gtools.o gutil1.o gutil2.o naugraph.o naugroup.o naurng.o nausparse.o schreier.o traces.o
+
+## Use
+
+For example:
+
+    ccall((:nauty_check, "./nauty.so"), Void,(Cint,Cint,Cint,Cint),64,1,1,26040)
+
+## Notes
+
+WORDSIZE is 64 on my work PC.
+
+Supposedly, can get global variables with
+
+    cglobal(("WORDSIZE","./nauty.so"),Cint)
+
+But it doesn't seem to work for #define's, for me. Maybe ask on the gitter. Same with macro functions.
+
+## Making a graph 
+
+### pynauty's approach
+
+*GRAPH_PTR is a kind of NyGraph
+
+number of set words: no_setwords = (no_verticies + WORDSIZE - 1) / WORDSIZE;
+
+    g->matrix = malloc(
+        (size_t g->no_setwords * size_t no_vertices * sizeof(setword)))
+
+    EMPTYSET -> EMPTYSET0(setadd,m) ->
+    "{setword *es;
+    for(
+        es=(setword*)(setadd)+(m);
+        --es>=(setword*)(setadd);
+    )
+    *es=0;
+    }"
+
+make an empty set
+    EMPTYSET(GRAPHROW(g->matrix, i, g->no_setwords)), g->no_setwords)
+
+### Todo
+- what's a setword
+- what's a set
