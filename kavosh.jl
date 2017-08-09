@@ -7,21 +7,25 @@
 module kavosh
     import LightGraphs
     const lg = LightGraphs
-    import Combinatorics
-    const cb = Combinatorics
+    # IterTools is 10x-2x faster than Combinatorics
+    # Make sure it uses revolving door algorithm
+    import IterTools
+    const it = IterTools
 
     # Find all subgraphs of size k in G
     function getsubgraphs(G,k)
-        answers = []
+        # No speedup compared to []
+        answers = Array{Array{Int64,1},1}()
         Visited = zeros(Bool,lg.nv(G))
         # For each node u
         for u in lg.vertices(G)
-            S = Dict()
+            # 3x speedup compared to Dict()
+            S = Dict{Int64,Array{Int64,1}}()
             # "Global" variable Visited
             Visited .= false
             Visited[u] = true
             # S are parents?
-            S[1] = u
+            S[1] = [u]
             Enumerate_Vertex(G,u,S,k-1,1,Visited,answers)
         end
         answers
@@ -46,7 +50,7 @@ module kavosh
             n = min(length(ValList),Remainder)
             # Pick k nodes from our current depth
             for k = 1:n
-                for combination in cb.combinations(ValList,k)
+                for combination in it.subsets(ValList,k)
                     # set the current selection at the current depth to them nodes
                     # Might get a performance boost if s was just a list of numbers, and Parents was stored separately.
                     s[i+1] = combination
