@@ -1,6 +1,5 @@
 # TODO:
 #   - give variables sensible names
-#   - Figure out how to make it return
 #   - Multithreading...
 #       - Each root node is independent
 
@@ -40,6 +39,7 @@ module kavosh
             # Sometimes, there are too many nodes in the motif.
             # Next step: olieshomegrowncannonlabeller(lg.adjacency_matrix(lg.induced_subgraph(G,temp)))
             # oh god must I really nauty
+            # This vcat line makes programme ~20% slower
             temp = vcat(values(s)...)
             push!(answers,temp)
             return
