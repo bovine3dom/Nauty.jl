@@ -66,10 +66,6 @@ module kavosh
         end
     end
 
-    function arerepeats(array)
-        return length(array) != length(Set(array))
-    end
-
     # Take graph, selected vertices of previous layer, and the root vertex, return vertices that could form unique motifs
     # This is the bit where the labels are considered. Only labels bigger than root are considered. This is to stop double counting.
     function Validate(G,Parents,u,Visited)
