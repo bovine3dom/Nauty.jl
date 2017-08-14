@@ -5,6 +5,8 @@ module nauty
 
 import LightGraphs
 
+const LIB_FILE = "$(@__DIR__)" * "/minnautywrap"
+
 # {{{ Types and structs
 
 # {{{ Julia versions of two important structs from nauty.h
@@ -77,7 +79,7 @@ end
 
 Not an inner constructor any more because I don't want to override default constructor...
 """
-const optionblk() = ccall((:defaultoptions_graph, "./minnautywrap"), optionblk, ())
+const optionblk() = ccall((:defaultoptions_graph, LIB_FILE), optionblk, ())
 
 struct statsblk
     grpsize1::Cdouble	#        /* size of group is */
@@ -127,7 +129,7 @@ function canonical_form(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
     partition = zeros(labelling)
     orbits = zeros(labelling)
 
-    ccall((:canonical_form, "./minnautywrap"), Void,
+    ccall((:canonical_form, LIB_FILE), Void,
           (NautyGraph, Cint, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, NautyGraph),
           ingraph, num_setwords, num_vertices, labelling, partition, orbits, outgraph)
 
@@ -150,13 +152,13 @@ function densenauty(g, options::optionblk)
     partition = zeros(labelling)
     orbits = zeros(labelling)
 
-    ccall((:densenauty_wrap, "./minnautywrap"), Void,
+    ccall((:densenauty_wrap, LIB_FILE), Void,
           (NautyGraph, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
            Ref{optionblk}, Cint, Cint, NautyGraph),
           ingraph, labelling, partition, orbits,
           Ref(options), num_setwords, num_vertices, outgraph)
 
-    #= ccall((:densenauty_defaults_wrap, "./minnautywrap"), Void, =#
+    #= ccall((:densenauty_defaults_wrap, LIB_FILE), Void, =#
     #=       (NautyGraph, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, =#
     #=        Cint, Cint, NautyGraph), =#
     #=       ingraph, labelling, partition, orbits, =#
@@ -212,7 +214,7 @@ function graph_receiver(g)
     ingraph = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(ingraph, 1, 2)
 
-    ccall((:graph_receiver, "./minnautywrap"), UInt64, (NautyGraph, Cint), ingraph, num_vertices * num_setwords)
+    ccall((:graph_receiver, LIB_FILE), UInt64, (NautyGraph, Cint), ingraph, num_vertices * num_setwords)
 end
 
 #= # Fields =#
