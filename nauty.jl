@@ -13,6 +13,9 @@ import LightGraphs
 Define a mutable copy of a struct at the same time as the immutable one and add constructors to both to allow easy conversion.
 
 Required because mutable structs are not substitutable for C structs.
+
+Author: Michael Eastwood
+Source: https://discourse.julialang.org/t/passing-an-array-of-structures-through-ccall/5194/15
 """
 macro define_mutable(immutable_struct)
    immutable_name = immutable_struct.args[2]
