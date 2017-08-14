@@ -116,7 +116,7 @@ Returns:
 - partition::Array{Cint}
 - orbits::Array{Cint}
 """
-function canonical_form(g::LightGraphs.Graph)
+function canonical_form(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
 
     ingraph = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(ingraph, 1, 2)
@@ -172,11 +172,11 @@ end
 
 
 """
-    lg_to_nauty(g::LightGraphs.Graph)
+    lg_to_nauty(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
 
 Convert to nauty-compatible adjacency matrix (uint array).
 """
-function lg_to_nauty(g::LightGraphs.Graph)
+function lg_to_nauty(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
     # Nauty compatible adjacency matrix:
     #   An array of m*n WORDSIZE bitfields.
     #   Where n = num vertices, m = num_setwords = ((n-1) / WORDSIZE) + 1
