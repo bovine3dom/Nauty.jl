@@ -1,5 +1,8 @@
 # TODO:
 #   - give variables sensible names
+#   - give functions sensible names
+#       - follow Julia convention
+#   - remove superfluous type annotaitons
 #   - Multithreading...
 #       - Each root node is independent
 
@@ -12,13 +15,13 @@ module kavosh
     const it = IterTools
 
     # Find all subgraphs of size k in G
-    function getsubgraphs(G,k)
+    function getsubgraphs(G,k)::Array{Array{Int64,1},1}
         # No speedup compared to []
         answers = Array{Array{Int64,1},1}()
         Visited = zeros(Bool,lg.nv(G))
         # For each node u
         for u in lg.vertices(G)
-            # 3x speedup compared to Dict()
+            # 3x speedup compared to Dict(). UInt8 uses ~5% less memory but is ~7% slower.
             S = Dict{Int64,Array{Int64,1}}()
             # "Global" variable Visited
             Visited .= false
@@ -35,10 +38,7 @@ module kavosh
         # If there are no more nodes to choose, terminate
         s = deepcopy(S) # Stops shorter trees from accidentally sharing data. Must be a neater way of doing this.
         if Remainder == 0
-            # TBH, this should probably return S.
-            # Sometimes, there are too many nodes in the motif.
             # Next step: olieshomegrowncannonlabeller(lg.adjacency_matrix(lg.induced_subgraph(G,temp)))
-            # oh god must I really nauty
             # This vcat line makes programme ~20% slower
             temp = vcat(values(s)...)
             push!(answers,temp)
@@ -68,8 +68,8 @@ module kavosh
 
     # Take graph, selected vertices of previous layer, and the root vertex, return vertices that could form unique motifs
     # This is the bit where the labels are considered. Only labels bigger than root are considered. This is to stop double counting.
-    function Validate(G,Parents,u,Visited)
-        ValList = []
+    function Validate(G::lg.SimpleGraphs.AbstractSimpleGraph,Parents::Array{Int64,1},u::Int64,Visited::Array{Bool,1})::Array{Int64,1}
+        ValList = Array{Int64,1}()
         # For all of the immediate neighbours of the parents
         for v in Parents
             # Original paper has this as the neighbours of U. 100% sure that it's a typo.
