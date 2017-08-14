@@ -36,7 +36,7 @@ module kavosh
     # Take graph, root vertex, "Selection": the vertices that are part of the current motif, the number of nodes left to choose
     function Enumerate_Vertex(G::lg.SimpleGraphs.AbstractSimpleGraph,u::Int64,S,Remainder::Int64,i::Int64,Visited::Array{Bool,1},answers)::Void
         # If there are no more nodes to choose, terminate
-        s = deepcopy(S) # Stops shorter trees from accidentally sharing data. Must be a neater way of doing this.
+        s = copy(S) # Stops shorter trees from accidentally sharing data. Must be a neater way of doing this.
         if Remainder == 0
             # Next step: olieshomegrowncannonlabeller(lg.adjacency_matrix(lg.induced_subgraph(G,temp)))
             # This vcat line makes programme ~20% slower
