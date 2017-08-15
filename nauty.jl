@@ -113,10 +113,14 @@ const NautyGraph = Ptr{UInt64}
 Find the canonical graph, orbits, relabelling and orbits of `g`.
 
 Returns:
-- labelling::Array{Cint}
 - canonical_graph::NautyGraph
-- partition::Array{Cint}
+    - The canonical graph of the class of isomorphs that g is in
+- labelling::Array{Cint}
+    - How to relabel g such that it becomes canonical_graph
 - orbits::Array{Cint}
+    - See nauty documentation/automorphism theory
+- partition::Array{Cint}
+    - Probably garbage
 """
 function canonical_form(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
 
@@ -135,7 +139,7 @@ function canonical_form(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
 
     # Return everything nauty gives us.
     # I'm not sure that partition is meaningful...
-    return labelling, outgraph, partition, orbits
+    return outgraph, labelling, partition, orbits
 end
 
 # {{{ This doesn't work yet.
@@ -197,8 +201,8 @@ function lg_to_nauty(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
     # Columns and rows reversed because I care about the column/row layout of
     # arr.chunks, not arr.
     for (rowi, row) = enumerate(g.fadjlist)
-        for (coli, value) = enumerate(row)
-            arr[end-coli+1,rowi] = true
+        for value = row
+            arr[end-value+1,rowi] = true
         end
     end
 
@@ -243,5 +247,30 @@ end
 #=   :($(x.name.primary)($([name == F ? :(p.second) : :(x.$name) =#
 #=                          for name in fieldnames(x)]...))) =#
 #= end =#
+
+using Base.Test
+
+@testset begin
+	"Convert the adjacency matrix of a directed graph into an undirected graph."
+	helper(x) = LightGraphs.Graph(x .| x')
+
+	# Two simple isomorphic graphs.
+	iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
+	iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
+
+	@test lg_to_nauty(iso1a) == Array{UInt64,1}([0x6000000000000000, 0x8000000000000000, 0x8000000000000000])
+	@test lg_to_nauty(iso1b) == Array{UInt64,1}([0x4000000000000000, 0xa000000000000000, 0x4000000000000000])
+
+	# Two simple isomorphic digraphs.
+	diso1a = LightGraphs.DiGraph(Array([0 1 1; 0 0 0; 0 0 0]))
+	diso1b = LightGraphs.DiGraph(Array([0 0 0; 1 0 1; 0 0 0]))
+
+	@test lg_to_nauty(diso1a) == Array{UInt64,1}([0x6000000000000000, 0x0000000000000000, 0x0000000000000000])
+	@test lg_to_nauty(diso1b) == Array{UInt64,1}([0x0000000000000000, 0xa000000000000000, 0x0000000000000000])
+
+	@test canonical_form(iso1a)[1] == canonical_form(iso1b)[1]
+
+	@test canonical_form(diso1a)[1] == canonical_form(diso1b)[1]
+end
 
 end

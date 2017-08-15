@@ -13,6 +13,7 @@ void canonical_form(graph *g, int num_setwords, int num_vertices,
 		    graph *canonical_graph) {
 	DEFAULTOPTIONS_GRAPH;
 	options.getcanon = 1;
+	options.digraph = 1;
 
 	// Ignore whatever we get given
 	statsblk stats;
