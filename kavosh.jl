@@ -6,8 +6,16 @@
 #   - Multithreading...
 #       - Each root node is independent
 
+# Notes
+# canonical labelling -> graph: (where nodes is number of nodes in subgraph)
+# a = BitArray(64,[nodes])
+# a.chunks = nauty.canonical_labelling(g)[1]
+# Array{Int64,2}(a[end-nodes+1:end,:])
+include("nauty.jl")
+
 module kavosh
     import LightGraphs
+    import nauty
     const lg = LightGraphs
     # IterTools is 10x-2x faster than Combinatorics
     # Make sure it uses revolving door algorithm
@@ -15,9 +23,9 @@ module kavosh
     const it = IterTools
 
     # Find all subgraphs of size k in G
-    function getsubgraphs(G,k)::Array{Array{Int64,1},1}
+    function getsubgraphs(G,k)::Dict{Array{UInt64,1},Int64}
         # No speedup compared to []
-        answers = Array{Array{Int64,1},1}()
+        answers = Dict{Array{UInt64,1},Int64}()
         Visited = zeros(Bool,lg.nv(G))
         # For each node u
         for u in lg.vertices(G)
@@ -40,8 +48,13 @@ module kavosh
         if Remainder == 0
             # Next step: olieshomegrowncannonlabeller(lg.adjacency_matrix(lg.induced_subgraph(G,temp)))
             # This vcat line makes programme ~20% slower
+            #temp = vcat(values(s)...)
+            #push!(answers,temp)
             temp = vcat(values(s)...)
-            push!(answers,temp)
+            k = nauty.canonical_form(G[temp])[1]
+            # Human readable alternative
+            #k = nauty.label_to_adj(nauty.canonical_form(G[temp])[1],3)
+            answers[k] = get(answers,k,0) + 1
             return
         else
             # Find vertices that could be part of unique motifs

@@ -211,6 +211,14 @@ function lg_to_nauty(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
     return arr.chunks #, num_setwords, num_vertices
 end
 
+function label_to_adj(label,nodes)
+    # change 64 to wordsize
+    temp = BitArray(64,nodes)
+    temp.chunks = label
+    Array{Int64,2}(temp[end-nodes+1:end,:])
+end
+
+
 # }}}
 
 # Experimental crap to remove...
