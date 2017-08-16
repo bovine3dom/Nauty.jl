@@ -23,13 +23,13 @@ module kavosh
     const it = IterTools
 
     # Find all subgraphs of size k in G
-    function getsubgraphs(G,k,verbose=false)::Dict{Array{UInt64,1},Int64}
+    function getsubgraphs(G,k,verbose=false)::Dict{Array{UInt64,1},Float64}
         # No speedup compared to []
         answers = Dict{Array{UInt64,1},Int64}()
         Visited = zeros(Bool,lg.nv(G))
         # For each node u
         for u in lg.vertices(G)
-            if verbose && (mod(u,100) == 0)
+            if verbose #&& (mod(u,10) == 0)
                 print("\r", round(u/lg.nv(G)*100), "% done")
             end
             # 3x speedup compared to Dict(). UInt8 uses ~5% less memory but is ~7% slower.
@@ -42,6 +42,11 @@ module kavosh
             Enumerate_Vertex(G,u,S,k-1,1,Visited,answers)
         end
         answers
+        d = Dict()
+        for (key,v) in answers
+            d[key] = v/binomial(lg.nv(G),k)
+        end
+        d
     end
 
     # Take graph, root vertex, "Selection": the vertices that are part of the current motif, the number of nodes left to choose
@@ -54,8 +59,8 @@ module kavosh
             #temp = vcat(values(s)...)
             #push!(answers,temp)
             temp = vcat(values(s)...)
+            # Most of memory usage is in the G[temp] call
             k = nauty.canonical_form(G[temp])[1]
-            lg.is_connected(lg.Graph(G[temp])) || println("wtf")
             # Human readable alternative
             #k = nauty.label_to_adj(nauty.canonical_form(G[temp])[1],3)
             answers[k] = get(answers,k,0) + 1
