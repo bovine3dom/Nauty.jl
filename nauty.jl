@@ -128,10 +128,10 @@ function canonical_form(g::GraphType) where GraphType <: LightGraphs.SimpleGraph
     (num_vertices, num_setwords) = size(ingraph, 1, 2)
 
     # These don't need to be zero'd, I'm just doing it for debugging reasons.
-    outgraph = zeros(ingraph)
-    labelling = zeros(Cint, num_vertices)
-    partition = zeros(labelling)
-    orbits = zeros(labelling)
+    outgraph = similar(ingraph)
+    labelling = Array{Cint}(num_vertices)
+    partition = similar(labelling)
+    orbits = similar(labelling)
 
     ccall((:canonical_form, LIB_FILE), Void,
           (NautyGraph, Cint, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, NautyGraph),
