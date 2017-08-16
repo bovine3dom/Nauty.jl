@@ -211,11 +211,12 @@ function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.A
     return arr.chunks #, num_setwords, num_vertices
 end
 
-function label_to_adj(label,nodes)
+function label_to_adj(label)
     # change 64 to wordsize
-    temp = BitArray(64,nodes)
+    temp = BitArray(64,size(label,1))
     temp.chunks = label
-    Array{Int64,2}(temp[end-nodes+1:end,:])
+    temparr = Array{Int64,2}(temp[end-size(label,1)+1:end,:])
+    flipdim(temparr',2)
 end
 
 
@@ -256,29 +257,29 @@ end
 #=                          for name in fieldnames(x)]...))) =#
 #= end =#
 
-using Base.Test
-
-@testset begin
-	"Convert the adjacency matrix of a directed graph into an undirected graph."
-	helper(x) = LightGraphs.Graph(x .| x')
-
-	# Two simple isomorphic graphs.
-	iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
-	iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
-
-	@test lg_to_nauty(iso1a) == Array{UInt64,1}([0x6000000000000000, 0x8000000000000000, 0x8000000000000000])
-	@test lg_to_nauty(iso1b) == Array{UInt64,1}([0x4000000000000000, 0xa000000000000000, 0x4000000000000000])
-
-	# Two simple isomorphic digraphs.
-	diso1a = LightGraphs.DiGraph(Array([0 1 1; 0 0 0; 0 0 0]))
-	diso1b = LightGraphs.DiGraph(Array([0 0 0; 1 0 1; 0 0 0]))
-
-	@test lg_to_nauty(diso1a) == Array{UInt64,1}([0x6000000000000000, 0x0000000000000000, 0x0000000000000000])
-	@test lg_to_nauty(diso1b) == Array{UInt64,1}([0x0000000000000000, 0xa000000000000000, 0x0000000000000000])
-
-	@test canonical_form(iso1a)[1] == canonical_form(iso1b)[1]
-
-	@test canonical_form(diso1a)[1] == canonical_form(diso1b)[1]
-end
+#using Base.Test
+#
+#@testset begin
+#	"Convert the adjacency matrix of a directed graph into an undirected graph."
+#	helper(x) = LightGraphs.Graph(x .| x')
+#
+#	# Two simple isomorphic graphs.
+#	iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
+#	iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
+#
+#	@test lg_to_nauty(iso1a) == Array{UInt64,1}([0x6000000000000000, 0x8000000000000000, 0x8000000000000000])
+#	@test lg_to_nauty(iso1b) == Array{UInt64,1}([0x4000000000000000, 0xa000000000000000, 0x4000000000000000])
+#
+#	# Two simple isomorphic digraphs.
+#	diso1a = LightGraphs.DiGraph(Array([0 1 1; 0 0 0; 0 0 0]))
+#	diso1b = LightGraphs.DiGraph(Array([0 0 0; 1 0 1; 0 0 0]))
+#
+#	@test lg_to_nauty(diso1a) == Array{UInt64,1}([0x6000000000000000, 0x0000000000000000, 0x0000000000000000])
+#	@test lg_to_nauty(diso1b) == Array{UInt64,1}([0x0000000000000000, 0xa000000000000000, 0x0000000000000000])
+#
+#	@test canonical_form(iso1a)[1] == canonical_form(iso1b)[1]
+#
+#	@test canonical_form(diso1a)[1] == canonical_form(diso1b)[1]
+#end
 
 end
