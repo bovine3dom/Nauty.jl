@@ -122,7 +122,7 @@ Returns:
 - partition::Array{Cint}
     - Probably garbage
 """
-function canonical_form(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
+function canonical_form(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
 
     ingraph = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(ingraph, 1, 2)
@@ -182,7 +182,7 @@ end
 
 Convert to nauty-compatible adjacency matrix (uint array).
 """
-function lg_to_nauty(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
+function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
     # Nauty compatible adjacency matrix:
     #   An array of m*n WORDSIZE bitfields.
     #   Where n = num vertices, m = num_setwords = ((n-1) / WORDSIZE) + 1

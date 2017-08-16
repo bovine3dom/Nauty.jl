@@ -42,7 +42,7 @@ module kavosh
     end
 
     # Take graph, root vertex, "Selection": the vertices that are part of the current motif, the number of nodes left to choose
-    function Enumerate_Vertex(G::lg.SimpleGraphs.AbstractSimpleGraph,u::Int64,S,Remainder::Int64,i::Int64,Visited::Array{Bool,1},answers)::Void
+    function Enumerate_Vertex(G::GraphType,u::Int64,S,Remainder::Int64,i::Int64,Visited::Array{Bool,1},answers)::Void where GraphType <: lg.SimpleGraphs.AbstractSimpleGraph
         # If there are no more nodes to choose, terminate
         s = copy(S) # Stops shorter trees from accidentally sharing data. Must be a neater way of doing this.
         if Remainder == 0
@@ -81,7 +81,7 @@ module kavosh
 
     # Take graph, selected vertices of previous layer, and the root vertex, return vertices that could form unique motifs
     # This is the bit where the labels are considered. Only labels bigger than root are considered. This is to stop double counting.
-    function Validate(G::lg.SimpleGraphs.AbstractSimpleGraph,Parents::Array{Int64,1},u::Int64,Visited::Array{Bool,1})::Array{Int64,1}
+    function Validate(G::GraphType,Parents::Array{Int64,1},u::Int64,Visited::Array{Bool,1})::Array{Int64,1} where GraphType <: lg.SimpleGraphs.AbstractSimpleGraph
         ValList = Array{Int64,1}()
         # For all of the immediate neighbours of the parents
         for v in Parents
