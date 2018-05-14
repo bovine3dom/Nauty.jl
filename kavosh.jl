@@ -23,7 +23,8 @@ module kavosh
     const it = IterTools
 
     # Find all subgraphs of size k in G
-    function getsubgraphs(G,k,verbose=false)::Dict{Array{UInt64,1},Float64}
+    # mild breaking change below: verbose now a keyword argument
+    function getsubgraphs(G,k;norm=true, verbose=false)::Dict{Array{UInt64,1},Float64}
         # No speedup compared to []
         answers = Dict{Array{UInt64,1},Int64}()
         Visited = zeros(Bool,lg.nv(G))
@@ -41,6 +42,7 @@ module kavosh
             S[1] = [u]
             Enumerate_Vertex(G,u,S,k-1,1,Visited,answers)
         end
+        if !norm return answers end
         normalisation = sum(values(answers))
         d = Dict()
         for (key,v) in answers
