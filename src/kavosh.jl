@@ -11,11 +11,10 @@
 # a = BitArray(64,[nodes])
 # a.chunks = nauty.canonical_labelling(g)[1]
 # Array{Int64,2}(a[end-nodes+1:end,:])
-include("nauty.jl")
 
 module kavosh
     import LightGraphs
-    import nauty
+    include("nauty.jl")
     const lg = LightGraphs
     # IterTools is 10x-2x faster than Combinatorics
     # Make sure it uses revolving door algorithm

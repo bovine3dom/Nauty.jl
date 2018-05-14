@@ -1,5 +1,3 @@
 module Motifs
-
-# package code goes here
-
+include("kavosh.jl")
 end # module
