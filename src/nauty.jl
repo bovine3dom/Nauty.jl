@@ -5,7 +5,7 @@ module nauty
 
 import LightGraphs
 
-const LIB_FILE = "$(@__DIR__)" * "/minnautywrap"
+const LIB_FILE = "$(@__DIR__)" * "/../deps/minnautywrap"
 
 # {{{ Types and structs
 
