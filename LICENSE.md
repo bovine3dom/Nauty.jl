@@ -1,6 +1,6 @@
-The Motifs.jl package is licensed under the Lesser GNU Public License, Version 3.0+:
+The Nauty.jl package is licensed under the Lesser GNU Public License, Version 3.0+:
 
-> Copyright (c) 2018: Oliver Blanthorn.
+> Copyright (c) 2018: Oliver Blanthorn & Colin Caine
 > This library is free software; you can redistribute it and/or
 > modify it under the terms of the GNU Lesser General Public
 > License as published by the Free Software Foundation; either

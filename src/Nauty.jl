@@ -1,7 +1,7 @@
 # Nauty canonical form wrapper for julia.
 
 "Julia wrapper for the Nauty C library."
-module nauty
+module Nauty
 
 import LightGraphs
 
