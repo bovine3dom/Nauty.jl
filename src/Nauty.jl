@@ -50,24 +50,24 @@ const Nboolean = Cint
     defaultptn::Nboolean       #  set lab,ptn,active for single cell? 
     cartesian::Nboolean        #  use cartesian rep for writing automs? 
     linelength::Cint           #  max chars/line (excl. '\n') for output 
-    outfile::Ptr{Void} #FILE *outfile;            #  file for output, if any 
-    userrefproc::Ptr{Void} # void (*userrefproc)       #  replacement for usual refine procedure 
+    outfile::Ptr{Void} #FILE *outfile;                   #  file for output, if any 
+    userrefproc::Ptr{Void} # void (*userrefproc)         #  replacement for usual refine procedure 
          #(graph*,int*,int*,int,int*,int*,set*,int*,int,int);
     userautomproc::Ptr{Void} # void (*userautomproc)     #  procedure called for each automorphism 
          # (int,int*,int*,int,int,int);
     userlevelproc::Ptr{Void} # void (*userlevelproc)     #  procedure called for each level 
          #(int*,int*,int,int*,statsblk*,int,int,int,int,int,int);
-    usernodeproc::Ptr{Void} # void (*usernodeproc)      #  procedure called for each node 
+    usernodeproc::Ptr{Void} # void (*usernodeproc)       #  procedure called for each node 
          #(graph*,int*,int*,int,int,int,int,int,int);
-    usercanonproc::Ptr{Void} # Cint  (*usercanonproc)     #  procedure called for better labellings 
+    usercanonproc::Ptr{Void} # Cint  (*usercanonproc)    #  procedure called for better labellings 
          #(graph*,int*,graph*,int,int,int,int);
-    invarproc::Ptr{Void} # void (*invarproc)         #  procedure to compute vertex-invariant 
+    invarproc::Ptr{Void} # void (*invarproc)             #  procedure to compute vertex-invariant 
          #(graph*,int*,int*,int,int,int,int*,int,Nboolean,int,int);
     tc_level::Cint             #  max level for smart target cell choosing 
     mininvarlevel::Cint        #  min level for invariant computation 
     maxinvarlevel::Cint        #  max level for invariant computation 
     invararg::Cint             #  value passed to (*invarproc)() 
-    dispatch::Ptr{Void} # dispatchvec *dispatch;    #  vector of object-specific routines 
+    dispatch::Ptr{Void} # dispatchvec *dispatch;         #  vector of object-specific routines 
     schreier::Nboolean         #  use random schreier method 
     extra_options::Ptr{Void} # void *extra_options;      #  arbitrary extra options 
 end
@@ -82,19 +82,19 @@ Not an inner constructor any more because I don't want to override default const
 const optionblk() = ccall((:defaultoptions_graph, LIB_FILE), optionblk, ())
 
 struct statsblk
-    grpsize1::Cdouble	#        /* size of group is */
-    grpsize2::Cint	#           /*    grpsize1 * 10^grpsize2 */
-    numorbits::Cint	#          /* number of orbits in group */
-    numgenerators::Cint	#      /* number of generators found */
-    errstatus::Cint	#          /* if non-zero : an error code */
-    numnodes::Culong	#      /* total number of nodes */
-    numbadleaves::Culong	#  /* number of leaves of no use */
-    maxlevel::Cint	#                /* maximum depth of search */
-    tctotal::Culong	#       /* total size of all target cells */
-    canupdates::Culong	#    /* number of updates of best label */
-    invapplics::Culong	#    /* number of applications of invarproc */
-    invsuccesses::Culong	#  /* number of successful uses of invarproc() */
-    invarsuclevel::Cint	#      /* least level where invarproc worked */
+    grpsize1::Cdouble	     # /* size of group is */
+    grpsize2::Cint	         # /* grpsize1 * 10^grpsize2 */
+    numorbits::Cint	         # /* number of orbits in group */
+    numgenerators::Cint	     # /* number of generators found */
+    errstatus::Cint	         # /* if non-zero : an error code */
+    numnodes::Culong	     # /* total number of nodes */
+    numbadleaves::Culong	 # /* number of leaves of no use */
+    maxlevel::Cint	         # /* maximum depth of search */
+    tctotal::Culong	         # /* total size of all target cells */
+    canupdates::Culong	     # /* number of updates of best label */
+    invapplics::Culong	     # /* number of applications of invarproc */
+    invsuccesses::Culong	 # /* number of successful uses of invarproc() */
+    invarsuclevel::Cint	     # /* least level where invarproc worked */
 end
 
 # }}}
