@@ -3,6 +3,6 @@ const lg = LightGraphs
 
 const ba8 = lg.barabasi_albert(8, 5, 2)
 
-include("nauty.jl")
+import Nauty
 
-g8 = nauty.lg_to_nauty(ba8)
+g8 = Nauty.lg_to_nauty(ba8)
