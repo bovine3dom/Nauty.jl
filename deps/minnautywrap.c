@@ -1,17 +1,12 @@
 #include <nauty.h>
 
-// TODO: learn how you're supposed to use the macro in nauty.h
-#define DEFAULTOPTIONS_GRAPH optionblk options = \
- {0,FALSE,FALSE,FALSE,TRUE,FALSE,CONSOLWIDTH, \
-  NULL,NULL,NULL,NULL,NULL,NULL,NULL,100,0,1,0,&dispatch_graph,FALSE,NULL}
-
 // Simplify calling from julia by removing the need to understand statsblk or optionblk.
 //
 // Could return a results struct to simplify signature, but then memory allocation is by C. Much better to have Julia handle that.
 void canonical_form(graph *g, int num_setwords, int num_vertices,
 		    int *canonical_labelling, int *partition, int *orbits,
 		    graph *canonical_graph) {
-	DEFAULTOPTIONS_GRAPH;
+	DEFAULTOPTIONS_GRAPH(options);
 	options.getcanon = 1;
 	options.digraph = 1;
 
@@ -26,7 +21,7 @@ void densenauty_defaults_wrap(
 	        int *orbits, int num_vertices, int num_setwords,
 	        graph *canonical_graph
 		) {
-	DEFAULTOPTIONS_GRAPH;
+	DEFAULTOPTIONS_GRAPH(options);
 
 	// Ignore whatever we get given
 	statsblk stats;
@@ -48,7 +43,7 @@ void densenauty_wrap(graph *g, int *labelling, int *partition,
 }
 
 optionblk defaultoptions_graph() {
-	DEFAULTOPTIONS_GRAPH;
+	DEFAULTOPTIONS_GRAPH(options);
 	return options;
 }
 
