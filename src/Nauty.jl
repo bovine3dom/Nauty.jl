@@ -22,24 +22,24 @@ Author: Michael Eastwood
 Source: https://discourse.julialang.org/t/passing-an-array-of-structures-through-ccall/5194/15
 """
 macro define_mutable(immutable_struct)
-   immutable_name = immutable_struct.args[2]
-   mutable_name = Symbol(immutable_name, "_mutable")
+    immutable_name = immutable_struct.args[2]
+    mutable_name = Symbol(immutable_name, "_mutable")
 
-   mutable_struct = copy(immutable_struct)
-   mutable_struct.args[1] = true # set the mutability to true
-   mutable_struct.args[2] = mutable_name
+    mutable_struct = copy(immutable_struct)
+    mutable_struct.args[1] = true # set the mutability to true
+    mutable_struct.args[2] = mutable_name
 
-   constructors = quote
-       function $mutable_name(x::$immutable_name)
-           $mutable_name(ntuple(i->getfield(x, i), nfields($immutable_name))...)
-       end
-       function $immutable_name(x::$mutable_name)
-           $immutable_name(ntuple(i->getfield(x, i), nfields($mutable_name))...)
-       end
-   end
+    constructors = quote
+        function $mutable_name(x::$immutable_name)
+            $mutable_name(ntuple(i->getfield(x, i), nfields($immutable_name))...)
+        end
+        function $immutable_name(x::$mutable_name)
+            $immutable_name(ntuple(i->getfield(x, i), nfields($mutable_name))...)
+        end
+    end
 
-   output = Expr(:block, immutable_struct, mutable_struct, constructors)
-   esc(output)
+    output = Expr(:block, immutable_struct, mutable_struct, constructors)
+    esc(output)
 end
 
 const Nboolean = Cint
@@ -84,19 +84,19 @@ Not an inner constructor any more because I don't want to override default const
 const optionblk() = ccall((:defaultoptions_graph, LIB_FILE), optionblk, ())
 
 struct statsblk
-    grpsize1::Cdouble	     # /* size of group is */
-    grpsize2::Cint	         # /* grpsize1 * 10^grpsize2 */
-    numorbits::Cint	         # /* number of orbits in group */
-    numgenerators::Cint	     # /* number of generators found */
-    errstatus::Cint	         # /* if non-zero : an error code */
-    numnodes::Culong	     # /* total number of nodes */
-    numbadleaves::Culong	 # /* number of leaves of no use */
-    maxlevel::Cint	         # /* maximum depth of search */
-    tctotal::Culong	         # /* total size of all target cells */
-    canupdates::Culong	     # /* number of updates of best label */
-    invapplics::Culong	     # /* number of applications of invarproc */
-    invsuccesses::Culong	 # /* number of successful uses of invarproc() */
-    invarsuclevel::Cint	     # /* least level where invarproc worked */
+    grpsize1::Cdouble        # /* size of group is */
+    grpsize2::Cint           # /* grpsize1 * 10^grpsize2 */
+    numorbits::Cint          # /* number of orbits in group */
+    numgenerators::Cint      # /* number of generators found */
+    errstatus::Cint          # /* if non-zero : an error code */
+    numnodes::Culong         # /* total number of nodes */
+    numbadleaves::Culong     # /* number of leaves of no use */
+    maxlevel::Cint           # /* maximum depth of search */
+    tctotal::Culong          # /* total size of all target cells */
+    canupdates::Culong       # /* number of updates of best label */
+    invapplics::Culong       # /* number of applications of invarproc */
+    invsuccesses::Culong     # /* number of successful uses of invarproc() */
+    invarsuclevel::Cint      # /* least level where invarproc worked */
 end
 
 # }}}
@@ -275,26 +275,26 @@ end
 #using Base.Test
 #
 #@testset begin
-#	"Convert the adjacency matrix of a directed graph into an undirected graph."
-#	helper(x) = LightGraphs.Graph(x .| x')
+#   "Convert the adjacency matrix of a directed graph into an undirected graph."
+#   helper(x) = LightGraphs.Graph(x .| x')
 #
-#	# Two simple isomorphic graphs.
-#	iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
-#	iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
+#   # Two simple isomorphic graphs.
+#   iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
+#   iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
 #
-#	@test lg_to_nauty(iso1a) == Array{UInt64,1}([0x6000000000000000, 0x8000000000000000, 0x8000000000000000])
-#	@test lg_to_nauty(iso1b) == Array{UInt64,1}([0x4000000000000000, 0xa000000000000000, 0x4000000000000000])
+#   @test lg_to_nauty(iso1a) == Array{UInt64,1}([0x6000000000000000, 0x8000000000000000, 0x8000000000000000])
+#   @test lg_to_nauty(iso1b) == Array{UInt64,1}([0x4000000000000000, 0xa000000000000000, 0x4000000000000000])
 #
-#	# Two simple isomorphic digraphs.
-#	diso1a = LightGraphs.DiGraph(Array([0 1 1; 0 0 0; 0 0 0]))
-#	diso1b = LightGraphs.DiGraph(Array([0 0 0; 1 0 1; 0 0 0]))
+#   # Two simple isomorphic digraphs.
+#   diso1a = LightGraphs.DiGraph(Array([0 1 1; 0 0 0; 0 0 0]))
+#   diso1b = LightGraphs.DiGraph(Array([0 0 0; 1 0 1; 0 0 0]))
 #
-#	@test lg_to_nauty(diso1a) == Array{UInt64,1}([0x6000000000000000, 0x0000000000000000, 0x0000000000000000])
-#	@test lg_to_nauty(diso1b) == Array{UInt64,1}([0x0000000000000000, 0xa000000000000000, 0x0000000000000000])
+#   @test lg_to_nauty(diso1a) == Array{UInt64,1}([0x6000000000000000, 0x0000000000000000, 0x0000000000000000])
+#   @test lg_to_nauty(diso1b) == Array{UInt64,1}([0x0000000000000000, 0xa000000000000000, 0x0000000000000000])
 #
-#	@test canonical_form(iso1a)[1] == canonical_form(iso1b)[1]
+#   @test canonical_form(iso1a)[1] == canonical_form(iso1b)[1]
 #
-#	@test canonical_form(diso1a)[1] == canonical_form(diso1b)[1]
+#   @test canonical_form(diso1a)[1] == canonical_form(diso1b)[1]
 #end
 
 end
