@@ -7,6 +7,8 @@ import LightGraphs
 
 const LIB_FILE = "$(@__DIR__)" * "/../deps/minnautywrap"
 
+const WORDSIZE = 64
+
 # {{{ Types and structs
 
 # {{{ Julia versions of two important structs from nauty.h
@@ -190,7 +192,6 @@ function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.A
     #   each m*WORDSIZE row are significant.
 
     # assume WORDSIZE = 64, can use nauty_check to confirm values are OK.
-    WORDSIZE = 64
     num_vertices = LightGraphs.nv(g)
     num_setwords = div(num_vertices - 1, WORDSIZE) + 1
 
@@ -211,12 +212,26 @@ function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.A
     return arr.chunks #, num_setwords, num_vertices
 end
 
+"""
+    label_to_adj(label)
+
+Convert a nauty canonical label to an adjacency matrix.
+"""
 function label_to_adj(label)
     # change 64 to wordsize
-    temp = BitArray(64,size(label,1))
+    temp = BitArray(WORDSIZE,size(label,1))
     temp.chunks = label
     temparr = Array{Int64,2}(temp[end-size(label,1)+1:end,:])
     flipdim(temparr',2)
+end
+
+"""
+    label_to_humanreadable(label::Array{UInt64})
+
+Convert a nauty label (an array of little-endian UInt64s) to something more readable.
+"""
+function label_to_humanreadable(label::Array{UInt64})
+    return @. Int128(hton(label))
 end
 
 
