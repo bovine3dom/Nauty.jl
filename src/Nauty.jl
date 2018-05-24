@@ -277,7 +277,6 @@ end
 Convert a nauty canonical label to an adjacency matrix.
 """
 function label_to_adj(label)
-    # change 64 to wordsize
     temp = BitArray(WORDSIZE,size(label,1))
     temp.chunks = label
     temparr = Array{Int64,2}(temp[end-size(label,1)+1:end,:])
