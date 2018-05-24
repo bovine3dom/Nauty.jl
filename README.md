@@ -4,16 +4,15 @@ Simple wrapper for using `nauty` with `LightGraphs` in Julia. Requires `gcc` and
 
 ## Todo
 
- - Pass options to nauty
-    - Eventually let us use coloured graphs
-    - Other options might be useful to someone
  - Friendlier return types
- - isomorphOf() / congruence.jl
+ - NautyGraph -> LightGraph
+ - MetaGraph -> (NautyGraph, labels, partition)
+ - isomorphOf() / congruence operator
  - Documentation (documenter.jl)
  - Pick a licence
- - Tests if we feel like it
+ - More comprehensive tests if we feel like it
  - Build options
- - Test MAXN=WORDSIZE optimisation effect. Build nauty twice if it matters, once with MAXN=0 if not
+    - Test `MAXN=WORDSIZE` optimisation effect. Build nauty twice if it matters, once with MAXN=0 if not
 
 ## API
 

@@ -24,7 +24,7 @@ end
    @test n.lg_to_nauty(diso1a) == Array{UInt64,1}([0x6000000000000000, 0x0000000000000000, 0x0000000000000000])
    @test n.lg_to_nauty(diso1b) == Array{UInt64,1}([0x0000000000000000, 0xa000000000000000, 0x0000000000000000])
 
-   # This indirectly tests densenauty, optionblk(), optionblk_mutable()
+   # This indirectly tests densenauty(), optionblk(), optionblk_mutable(), lg_to_nauty()
    @test n.canonical_form(iso1a).canong == n.canonical_form(iso1b).canong
    @test n.canonical_form(diso1a).canong == n.canonical_form(diso1b).canong
 end
