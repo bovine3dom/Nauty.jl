@@ -3,8 +3,7 @@ lg = LightGraphs
 
 Pkg.build("Nauty")
 Pkg.test("Nauty")
-reload("Nauty")
-n = Nauty
+reload("Nauty"); n = Nauty
 
 # Example graph
 ba8 = lg.barabasi_albert(8, 5, 2)
@@ -18,5 +17,7 @@ for i = 1:2000000
   n.densenauty(ba8, n.optionblk_mutable())
 end
 
+n.baked_canonical_form(ba8)
+n.baked_canonical_form_and_stats(ba8)
 
 n.optionblk()

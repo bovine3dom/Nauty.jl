@@ -134,6 +134,7 @@ const NautyGraphC = Ptr{UInt64}
 
 # }}}
 
+const DEFAULTOPTIONS_GRAPH = optionblk()
 
 # Interface:
 
@@ -184,7 +185,7 @@ Raw interface to nauty.c/densenauty. See section 6 (Calling nauty and Traces) of
 Equivalent to densenauty(lg_to_nauty(g), options).
 """
 function densenauty(g::NautyGraph,
-                    options = optionblk(),
+                    options = DEFAULTOPTIONS_GRAPH,
                     labelling = nothing::Union{Void, Array{Cint}},
                     partition = nothing::Union{Void, Array{Cint}})
 
@@ -214,7 +215,44 @@ function densenauty(g::NautyGraph,
     return nautyreturn(outgraph, labelling, partition, orbits, stats)
 end
 
-function densenauty(g::GraphType, options = optionblk()) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+    g = lg_to_nauty(g)
+    (num_vertices, num_setwords) = size(g, 1, 2)
+    stats = statsblk()
+
+    labelling = zeros(Cint, size(g))
+    partition = zeros(labelling)
+
+    # These don't need to be zero'd, I'm just doing it for debugging reasons.
+    outgraph = zeros(g)
+    orbits = zeros(labelling)
+
+    ccall((:baked_options, LIB_FILE), Void,
+          (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, stats, num_setwords, num_vertices, outgraph)
+
+    # Return everything nauty gives us.
+    return nautyreturn(outgraph, labelling, partition, orbits, stats)
+end
+
+function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+    g = lg_to_nauty(g)
+    (num_vertices, num_setwords) = size(g, 1, 2)
+
+    labelling = zeros(Cint, size(g))
+    partition = zeros(labelling)
+
+    # These don't need to be zero'd, I'm just doing it for debugging reasons.
+    outgraph = zeros(g)
+    orbits = zeros(labelling)
+
+    ccall((:baked_options_and_stats, LIB_FILE), Void,
+          (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, num_setwords, num_vertices, outgraph)
+
+    # Return everything nauty gives us.
+    return outgraph, labelling, partition, orbits
+end
+
+function densenauty(g::GraphType, options = DEFAULTOPTIONS_GRAPH) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
     return densenauty(lg_to_nauty(g), options)
 end
 
@@ -230,7 +268,7 @@ Equivalent to:
 Find the canonical graph, orbits, relabelling and orbits of `g`.
 """
 function canonical_form(g)
-    m = optionblk_mutable()
+    m = optionblk_mutable(DEFAULTOPTIONS_GRAPH)
     m.getcanon = 1
     m.digraph = 1
     densenauty(g, optionblk(m))
