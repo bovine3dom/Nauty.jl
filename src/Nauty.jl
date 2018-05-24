@@ -232,6 +232,7 @@ Find the canonical graph, orbits, relabelling and orbits of `g`.
 function canonical_form(g)
     m = optionblk_mutable()
     m.getcanon = 1
+    m.digraph = 1
     densenauty(g, optionblk(m))
 end
 
