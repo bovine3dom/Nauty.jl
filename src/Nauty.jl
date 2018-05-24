@@ -7,7 +7,7 @@ import LightGraphs
 
 const LIB_FILE = "$(@__DIR__)" * "/../deps/minnautywrap"
 
-const WORDSIZE = 64
+const WORDSIZE = ccall((:wordsize, LIB_FILE), Int, ())
 
 # {{{ Types and structs
 
@@ -38,40 +38,49 @@ macro define_mutable(immutable_struct)
         end
     end
 
-    output = Expr(:block, immutable_struct, mutable_struct, constructors)
+    converters = quote
+        function Base.convert(::Type{$immutable_name}, mut::$mutable_name)
+          $immutable_name(mut)
+        end
+        function Base.convert(::Type{$mutable_name}, mut::$immutable_name)
+          $mutable_name(mut)
+        end
+    end
+
+    output = Expr(:block, immutable_struct, mutable_struct, constructors, converters)
     esc(output)
 end
 
 const Nboolean = Cint
 
 @define_mutable struct optionblk
-    getcanon::Cint             #  make canong and canonlab? 
-    digraph::Nboolean          #  multiple edges or loops? 
-    writeautoms::Nboolean      #  write automorphisms? 
-    writemarkers::Nboolean     #  write stats on pts fixed, etc.? 
-    defaultptn::Nboolean       #  set lab,ptn,active for single cell? 
-    cartesian::Nboolean        #  use cartesian rep for writing automs? 
-    linelength::Cint           #  max chars/line (excl. '\n') for output 
-    outfile::Ptr{Void} #FILE *outfile;                   #  file for output, if any 
-    userrefproc::Ptr{Void} # void (*userrefproc)         #  replacement for usual refine procedure 
-         #(graph*,int*,int*,int,int*,int*,set*,int*,int,int);
-    userautomproc::Ptr{Void} # void (*userautomproc)     #  procedure called for each automorphism 
-         # (int,int*,int*,int,int,int);
-    userlevelproc::Ptr{Void} # void (*userlevelproc)     #  procedure called for each level 
-         #(int*,int*,int,int*,statsblk*,int,int,int,int,int,int);
-    usernodeproc::Ptr{Void} # void (*usernodeproc)       #  procedure called for each node 
-         #(graph*,int*,int*,int,int,int,int,int,int);
-    usercanonproc::Ptr{Void} # Cint  (*usercanonproc)    #  procedure called for better labellings 
-         #(graph*,int*,graph*,int,int,int,int);
-    invarproc::Ptr{Void} # void (*invarproc)             #  procedure to compute vertex-invariant 
-         #(graph*,int*,int*,int,int,int,int*,int,Nboolean,int,int);
-    tc_level::Cint             #  max level for smart target cell choosing 
-    mininvarlevel::Cint        #  min level for invariant computation 
-    maxinvarlevel::Cint        #  max level for invariant computation 
-    invararg::Cint             #  value passed to (*invarproc)() 
-    dispatch::Ptr{Void} # dispatchvec *dispatch;         #  vector of object-specific routines 
-    schreier::Nboolean         #  use random schreier method 
-    extra_options::Ptr{Void} # void *extra_options;      #  arbitrary extra options 
+    getcanon::Cint            # make canong and canonlab?
+    digraph::Nboolean         # multiple edges or loops?
+    writeautoms::Nboolean     # write automorphisms?
+    writemarkers::Nboolean    # write stats on pts fixed, etc.?
+    defaultptn::Nboolean      # set lab,ptn,active for single cell?
+    cartesian::Nboolean       # use cartesian rep for writing automs?
+    linelength::Cint          # max chars/line (excl. '\n') for output
+    outfile::Ptr{Void}        # FILE *outfile;                                            # file for output, if any
+    userrefproc::Ptr{Void}    # void (*userrefproc)                                       # replacement for usual refine procedure
+                              # (graph*,int*,int*,int,int*,int*,set*,int*,int,int);
+    userautomproc::Ptr{Void}  # void (*userautomproc)                                     # procedure called for each automorphism
+                              # (int,int*,int*,int,int,int);
+    userlevelproc::Ptr{Void}  # void (*userlevelproc)                                     # procedure called for each level
+                              # (int*,int*,int,int*,statsblk*,int,int,int,int,int,int);
+    usernodeproc::Ptr{Void}   # void (*usernodeproc)                                      # procedure called for each node
+                              # (graph*,int*,int*,int,int,int,int,int,int);
+    usercanonproc::Ptr{Void}  # Cint  (*usercanonproc)                                    # procedure called for better labellings
+                              # (graph*,int*,graph*,int,int,int,int);
+    invarproc::Ptr{Void}      # void (*invarproc)                                         # procedure to compute vertex-invariant
+                              # (graph*,int*,int*,int,int,int,int*,int,Nboolean,int,int);
+    tc_level::Cint            # max level for smart target cell choosing
+    mininvarlevel::Cint       # min level for invariant computation
+    maxinvarlevel::Cint       # max level for invariant computation
+    invararg::Cint            # value passed to (*invarproc)()
+    dispatch::Ptr{Void}       # dispatchvec *dispatch;                                    # vector of object-specific routines
+    schreier::Nboolean        # use random schreier method
+    extra_options::Ptr{Void}  # void *extra_options;                                      # arbitrary extra options
 end
 
 """
@@ -82,6 +91,20 @@ end
 Not an inner constructor any more because I don't want to override default constructor...
 """
 const optionblk() = ccall((:defaultoptions_graph, LIB_FILE), optionblk, ())
+const optionblk_mutable() = optionblk_mutable(optionblk())
+
+function pprintobject(name, obj, sep=", ")
+  print("$name(")
+  print(join(map(fn -> "$fn=$(getfield(obj, fn))", fieldnames(obj)), sep))
+  print(")")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", options::Nauty.optionblk)
+    pprintobject("optionblk", options)
+end
+function Base.show(io::IO, ::MIME"text/plain", options::Nauty.optionblk_mutable)
+    pprintobject("optionblk_mutable", options)
+end
 
 struct statsblk
     grpsize1::Cdouble        # /* size of group is */
@@ -99,10 +122,15 @@ struct statsblk
     invarsuclevel::Cint      # /* least level where invarproc worked */
 end
 
+const statsblk() = statsblk(zeros(13)...)
+function Base.show(io::IO, ::MIME"text/plain", stats::Nauty.statsblk)
+    pprintobject("statsblk", stats)
+end
+
 # }}}
 
-"Julia automatically converts arrays to suitable Ptr{UInt64}s when passed in ccall."
-const NautyGraph = Ptr{UInt64}
+const NautyGraph = Array{UInt64}
+const NautyGraphC = Ptr{UInt64}
 
 # }}}
 
@@ -110,71 +138,102 @@ const NautyGraph = Ptr{UInt64}
 # Interface:
 
 """
-    canonical_form(g::LightGraphs.Graph)
+    canong::NautyGraph
 
-Find the canonical graph, orbits, relabelling and orbits of `g`.
+The canonical graph of the class of isomorphs that g is in. Only meaningful if
+options.getcanon was 1
 
-Returns:
-- canonical_graph::NautyGraph
-    - The canonical graph of the class of isomorphs that g is in
-- labelling::Array{Cint}
-    - How to relabel g such that it becomes canonical_graph
-- orbits::Array{Cint}
-    - See nauty documentation/automorphism theory
-- partition::Array{Cint}
-    - Probably garbage
+    labelling::Array{Cint}
+
+if options.getcanon = 1, then this is the vertices of g in the order that they
+should be relabelled to give canonical_graph.
+
+    partition::Array{Cint}
+
+colouring information for labels
+
+    orbits::Array{Cint}
+
+Orbits of the automorphism group
+
+    stats::statsblk
+
+stats related to the Nauty run
 """
-function canonical_form(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
-
-    ingraph = lg_to_nauty(g)
-    (num_vertices, num_setwords) = size(ingraph, 1, 2)
-
-    # These don't need to be zero'd, I'm just doing it for debugging reasons.
-    outgraph = similar(ingraph)
-    labelling = Array{Cint}(num_vertices)
-    partition = similar(labelling)
-    orbits = similar(labelling)
-
-    ccall((:canonical_form, LIB_FILE), Void,
-          (NautyGraph, Cint, Cint, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, NautyGraph),
-          ingraph, num_setwords, num_vertices, labelling, partition, orbits, outgraph)
-
-    # Return everything nauty gives us.
-    # I'm not sure that partition is meaningful...
-    return outgraph, labelling, partition, orbits
+struct nautyreturn
+    canong::NautyGraph
+    labels::Array{Cint}
+    partition::Array{Cint}
+    orbits::Array{Cint}
+    stats::statsblk
+end
+function Base.show(io::IO, ::MIME"text/plain", stats::nautyreturn)
+    pprintobject("nautyreturn", stats, "\n")
 end
 
-# {{{ This doesn't work yet.
+"""
+    densenauty(g::NautyGraph
+                    options = optionblk(),
+                    labelling = zeros(Cint, size(g)),
+                    partition = zeros(labelling))
 
-function densenauty(g, options::optionblk)
-    # Return the canonical form in some way that is cheap to test equivalence of.
+Raw interface to nauty.c/densenauty. See section 6 (Calling nauty and Traces) of the nauty and Traces User's Guide for the authoritative definition of these parameters. Returns `nautyreturn`.
 
-    ingraph = lg_to_nauty(g)
-    (num_vertices, num_setwords) = size(ingraph, 1, 2)
+    densenauty(g::GraphType, options = optionblk()) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+
+Equivalent to densenauty(lg_to_nauty(g), options).
+"""
+function densenauty(g::NautyGraph,
+                    options = optionblk(),
+                    labelling = nothing::Union{Void, Array{Cint}},
+                    partition = nothing::Union{Void, Array{Cint}})
+
+    (num_vertices, num_setwords) = size(g, 1, 2)
+    stats = statsblk()
+
+    # labelling and partition must be defined if defaultptn is not set and must not be defined if they are.
+    @assert (labelling == nothing) == (options.defaultptn == 1)
+    @assert (partition == nothing) == (options.defaultptn == 1)
+
+    # Create some empty arrays for nauty
+    if options.defaultptn == 1
+        #= labelling = Array{Cint}(size(num_vertices)) =#
+        #= partition = Array{Cint}(size(num_vertices)) =#
+        labelling = zeros(Cint, size(g))
+        partition = zeros(labelling)
+    end
 
     # These don't need to be zero'd, I'm just doing it for debugging reasons.
-    outgraph = zeros(ingraph)
-    labelling = zeros(Cint, num_vertices)
-    partition = zeros(labelling)
+    outgraph = zeros(g)
     orbits = zeros(labelling)
 
-    ccall((:densenauty_wrap, LIB_FILE), Void,
-          (NautyGraph, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
-           Ref{optionblk}, Cint, Cint, NautyGraph),
-          ingraph, labelling, partition, orbits,
-          Ref(options), num_setwords, num_vertices, outgraph)
-
-    #= ccall((:densenauty_defaults_wrap, LIB_FILE), Void, =#
-    #=       (NautyGraph, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, =#
-    #=        Cint, Cint, NautyGraph), =#
-    #=       ingraph, labelling, partition, orbits, =#
-    #=       num_setwords, num_vertices, outgraph) =#
+    ccall((:densenauty, LIB_FILE), Void,
+          (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{optionblk}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, options, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
-    # I'm not sure that partition is meaningful...
-    return labelling, outgraph, partition, orbits
+    return nautyreturn(outgraph, labelling, partition, orbits, stats)
 end
-# }}}
+
+function densenauty(g::GraphType, options = optionblk()) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+    return densenauty(lg_to_nauty(g), options)
+end
+
+"""
+    canonical_form(g)
+
+Equivalent to:
+
+    m = optionblk_mutable()
+    m.getcanon = 1
+    densenauty(g, m)
+
+Find the canonical graph, orbits, relabelling and orbits of `g`.
+"""
+function canonical_form(g)
+    m = optionblk_mutable()
+    m.getcanon = 1
+    densenauty(g, optionblk(m))
+end
 
 # {{{ Helpers
 
@@ -242,7 +301,7 @@ function graph_receiver(g)
     ingraph = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(ingraph, 1, 2)
 
-    ccall((:graph_receiver, LIB_FILE), UInt64, (NautyGraph, Cint), ingraph, num_vertices * num_setwords)
+    ccall((:graph_receiver, LIB_FILE), UInt64, (NautyGraphC, Cint), ingraph, num_vertices * num_setwords)
 end
 
 #= # Fields =#
@@ -271,30 +330,5 @@ end
 #=   :($(x.name.primary)($([name == F ? :(p.second) : :(x.$name) =#
 #=                          for name in fieldnames(x)]...))) =#
 #= end =#
-
-#using Base.Test
-#
-#@testset begin
-#   "Convert the adjacency matrix of a directed graph into an undirected graph."
-#   helper(x) = LightGraphs.Graph(x .| x')
-#
-#   # Two simple isomorphic graphs.
-#   iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
-#   iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
-#
-#   @test lg_to_nauty(iso1a) == Array{UInt64,1}([0x6000000000000000, 0x8000000000000000, 0x8000000000000000])
-#   @test lg_to_nauty(iso1b) == Array{UInt64,1}([0x4000000000000000, 0xa000000000000000, 0x4000000000000000])
-#
-#   # Two simple isomorphic digraphs.
-#   diso1a = LightGraphs.DiGraph(Array([0 1 1; 0 0 0; 0 0 0]))
-#   diso1b = LightGraphs.DiGraph(Array([0 0 0; 1 0 1; 0 0 0]))
-#
-#   @test lg_to_nauty(diso1a) == Array{UInt64,1}([0x6000000000000000, 0x0000000000000000, 0x0000000000000000])
-#   @test lg_to_nauty(diso1b) == Array{UInt64,1}([0x0000000000000000, 0xa000000000000000, 0x0000000000000000])
-#
-#   @test canonical_form(iso1a)[1] == canonical_form(iso1b)[1]
-#
-#   @test canonical_form(diso1a)[1] == canonical_form(diso1b)[1]
-#end
 
 end

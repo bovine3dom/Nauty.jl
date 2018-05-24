@@ -1,52 +1,15 @@
 #include <nauty.h>
 
-// Simplify calling from julia by removing the need to understand statsblk or optionblk.
-//
-// Could return a results struct to simplify signature, but then memory allocation is by C. Much better to have Julia handle that.
-void canonical_form(graph *g, int num_setwords, int num_vertices,
-		    int *canonical_labelling, int *partition, int *orbits,
-		    graph *canonical_graph) {
-	DEFAULTOPTIONS_GRAPH(options);
-	options.getcanon = 1;
-	options.digraph = 1;
-
-	// Ignore whatever we get given
-	statsblk stats;
-
-	densenauty(g, canonical_labelling, partition, orbits, &options, &stats, num_setwords, num_vertices, canonical_graph);
-}
-
-void densenauty_defaults_wrap(
-		graph *g, int *labelling, int *partition,
-	        int *orbits, int num_vertices, int num_setwords,
-	        graph *canonical_graph
-		) {
-	DEFAULTOPTIONS_GRAPH(options);
-
-	// Ignore whatever we get given
-	statsblk stats;
-
-	densenauty(g, labelling, partition, orbits, &options, &stats, num_setwords, num_vertices, canonical_graph);
-}
-
-
-// Wrapper that sets and ignores a statsblk object.
-void densenauty_wrap(graph *g, int *labelling, int *partition,
-		     int *orbits, optionblk *options,
-		     int num_vertices, int num_setwords,
-		     graph *canonical_graph) {
-	// Give nauty a statsblk, but ignore the contents of it.
-	statsblk stats;
-
-	// Call nauty
-	densenauty(g, labelling, partition, orbits, options, &stats, num_setwords, num_vertices, canonical_graph);
-}
-
 optionblk defaultoptions_graph() {
 	DEFAULTOPTIONS_GRAPH(options);
 	return options;
 }
 
+long wordsize() {
+	return WORDSIZE;
+}
+
+/*
 void selftest() {
 	graph g[4] = {0, 0, 0, 0};
 	graph outg[4];
@@ -63,10 +26,6 @@ setword graph_receiver(graph *g, int len) {
 		acc += g[i] >> 32;
 	}
 	return acc;
-}
-
-void int_fiddler(int *foo) {
-	*foo = 8;
 }
 
 /* nauty(g->matrix, g->lab, g->ptn, NULL, g->orbits, */
