@@ -369,4 +369,44 @@ end
 #=                          for name in fieldnames(x)]...))) =#
 #= end =#
 
+module colouring
+	import MetaGraphs
+	const mg = MetaGraphs
+
+	g = mg.MetaGraph(lg.barabasi_albert(1000,2))
+
+	# need to take one off all labels when talking to nauty
+
+	# colours:
+	# give labelling which is node labels .- 1 sorted in terms of colour
+	# partition which is array of 1s until colour changes in label, where it is 0.
+
+	function setcolours!(g, dict::Dict{Int,String})
+		for (vertex, colour) in dict
+			mg.set_prop!(g, vertex, :colour,colour)
+		end
+	end
+
+	coldict = Dict(
+		1 => "green",
+		2 => "yellow",
+		3 => "orange",
+		4 => "green",
+	)
+
+	setcolours!(g,coldict)
+
+	colours = get.(collect(Set(mg.props.(g,1:lg.nv(g)))),:colour,"") # get all colours
+
+	coloursarray = [collect(mg.filter_vertices(g,(graph, vertex) -> begin
+							get(mg.props(graph, vertex), :colour, "") == c
+						end
+					)) for c in colours]
+
+	labelling = vcat(coloursarray.-1...)
+
+	partition = vcat(map.(t -> t[1]==1 ? 0 : 1, enumerate.(coloursarray))...)
+end
+
+
 end
