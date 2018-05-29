@@ -299,8 +299,8 @@ function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.A
 
     # Columns and rows reversed because I care about the column/row layout of
     # arr.chunks, not arr.
-    for (rowi, row) = enumerate(g.fadjlist)
-        for value = row
+    for (rowi, row) in enumerate(g.fadjlist)
+        for value in row
             arr[end-value+1,rowi] = true
         end
     end
