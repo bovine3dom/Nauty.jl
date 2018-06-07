@@ -373,7 +373,7 @@ module colouring
 	import MetaGraphs
 	const mg = MetaGraphs
 
-	g = mg.MetaGraph(lg.barabasi_albert(1000,2))
+	g = mg.MetaGraph(lg.barabasi_albert(10,2))
 
 	# need to take one off all labels when talking to nauty
 
@@ -391,21 +391,38 @@ module colouring
 		1 => "green",
 		2 => "yellow",
 		3 => "orange",
-		4 => "green",
+		4 => "pink",
+		5 => "green",
+		6 => "orange",
 	)
 
 	setcolours!(g,coldict)
+	colours = get.(collect(Set(mg.props.(g,1:lg.nv(g)))),LANG["hue"],"") # get all colours
 
-	colours = get.(collect(Set(mg.props.(g,1:lg.nv(g)))),:colour,"") # get all colours
+
 
 	coloursarray = [collect(mg.filter_vertices(g,(graph, vertex) -> begin
-							get(mg.props(graph, vertex), :colour, "") == c
+							get(mg.props(graph, vertex), LANG["hue"], "") == c
 						end
 					)) for c in colours]
 
-	labelling = vcat(coloursarray.-1...)
+	labelling = Cint.(vcat(coloursarray.-1...))
 
-	partition = vcat(map.(t -> t[1]==1 ? 0 : 1, enumerate.(coloursarray))...)
+	partition = Cint.(vcat(map.(t -> t[1]==1 ? 0 : 1, enumerate.(coloursarray))...))
+
+	a = Nauty.optionblk_mutable(Nauty.DEFAULTOPTIONS_GRAPH)
+	a.getcanon = 1
+	a.digraph = 1
+	a.defaultptn = 0
+	blah = Nauty.label_to_adj(
+		Nauty.densenauty(
+			Nauty.lg_to_nauty(g.graph),
+			Nauty.optionblk(a),
+			labelling,
+			partition
+		).canong
+	)
+
 end
 
 
