@@ -372,6 +372,8 @@ end
 module colouring
 	import MetaGraphs
 	const mg = MetaGraphs
+	import LightGraphs  
+	const lg = LightGraphs
 
 	g = mg.MetaGraph(lg.barabasi_albert(10,2))
 
