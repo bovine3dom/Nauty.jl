@@ -374,6 +374,8 @@ module colouring
 	const mg = MetaGraphs
 	import LightGraphs  
 	const lg = LightGraphs
+    import GraphPlot
+    const gp = GraphPlot
 
 	g = mg.MetaGraph(lg.barabasi_albert(10,2))
 
@@ -426,6 +428,11 @@ module colouring
 			partition
 		).canong
 	)
+
+    function plot(g)
+        nodefillc = [get(mg.props(g,v),:colour,"black") for v in 1:lg.nv(g)]
+        gp.gplot(g.graph,nodefillc=nodefillc)
+    end
 
 end
 
