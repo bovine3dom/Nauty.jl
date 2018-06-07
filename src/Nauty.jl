@@ -397,17 +397,19 @@ module colouring
 	)
 
 	setcolours!(g,coldict)
-	colours = get.(collect(Set(mg.props.(g,1:lg.nv(g)))),LANG["hue"],"") # get all colours
+	colours = get.(collect(Set(mg.props.(g,1:lg.nv(g)))), :colour,"") # get all colours
 
 
-
+    # Get an array of arrays of nodes which are all the same colour
 	coloursarray = [collect(mg.filter_vertices(g,(graph, vertex) -> begin
-							get(mg.props(graph, vertex), LANG["hue"], "") == c
+							get(mg.props(graph, vertex), :colour, "") == c
 						end
 					)) for c in colours]
 
+    # Nauty numbers its nodes from 0
 	labelling = Cint.(vcat(coloursarray.-1...))
 
+    # Give the first node of each colour a "label" of 0, otherwise 1, as Nauty requires
 	partition = Cint.(vcat(map.(t -> t[1]==1 ? 0 : 1, enumerate.(coloursarray))...))
 
 	a = Nauty.optionblk_mutable(Nauty.DEFAULTOPTIONS_GRAPH)
