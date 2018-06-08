@@ -376,6 +376,7 @@ module colouring
 	const lg = LightGraphs
     import GraphPlot
     const gp = GraphPlot
+    import Nauty
 
 	g = mg.MetaGraph(lg.barabasi_albert(10,2))
 
@@ -413,8 +414,8 @@ module colouring
     # Nauty numbers its nodes from 0
 	labelling = Cint.(vcat(coloursarray.-1...))
 
-    # Give the first node of each colour a "label" of 0, otherwise 1, as Nauty requires
-	partition = Cint.(vcat(map.(t -> t[1]==1 ? 0 : 1, enumerate.(coloursarray))...))
+    # Give the last node of each colour a "label" of 0, otherwise 1, as Nauty requires
+    partition = vcat([begin z[end]=0; z end for z in ones.(Cint,size.(coloursarray))]...)
 
 	a = Nauty.optionblk_mutable(Nauty.DEFAULTOPTIONS_GRAPH)
 	a.getcanon = 1
