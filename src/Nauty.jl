@@ -14,6 +14,8 @@ const WORDSIZE = ccall((:wordsize, LIB_FILE), Int, ())
 # {{{ Julia versions of two important structs from nauty.h
 
 """
+    define_mutable(immutable_struct)
+
 Define a mutable copy of a struct at the same time as the immutable one and add constructors to both to allow easy conversion.
 
 Required because mutable structs are not substitutable for C structs.
