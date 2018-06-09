@@ -1,6 +1,14 @@
 # Nauty.jl
 
-Simple wrapper for using `nauty` with `LightGraphs` in Julia. Requires `gcc` and a POSIX style build environment.
+Simple wrapper for using `nauty`, a graph isomorphism package, with `LightGraphs` in Julia. Requires `gcc` and a POSIX style build environment.
+
+## Example usage
+
+Check if two graphs are isomorphs of each other:
+
+```julia
+baked_canonical_form(g1).canong == baked_canonical_form(g2).canong
+```
 
 ## Todo
 
@@ -13,6 +21,7 @@ Simple wrapper for using `nauty` with `LightGraphs` in Julia. Requires `gcc` and
  - More comprehensive tests if we feel like it
  - Build options
     - Test `MAXN=WORDSIZE` optimisation effect. Build nauty twice if it matters, once with MAXN=0 if not
+ - Use baked_canonical_form automatically
 
 ## API
 
