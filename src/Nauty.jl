@@ -182,7 +182,7 @@ end
 
 Raw interface to nauty.c/densenauty. See section 6 (Calling nauty and Traces) of the nauty and Traces User's Guide for the authoritative definition of these parameters. Returns `nautyreturn`.
 
-    densenauty(g::GraphType, options = optionblk()) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+    densenauty(g::GraphType, options = optionblk()) where GraphType <: LightGraphs.AbstractGraph
 
 Equivalent to densenauty(lg_to_nauty(g), options).
 """
@@ -217,7 +217,7 @@ function densenauty(g::NautyGraph,
     return nautyreturn(outgraph, labelling, partition, orbits, stats)
 end
 
-function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
     g = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(g, 1, 2)
     stats = statsblk()
@@ -236,7 +236,7 @@ function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.Simpl
     return nautyreturn(outgraph, labelling, partition, orbits, stats)
 end
 
-function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
     g = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(g, 1, 2)
 
@@ -254,7 +254,7 @@ function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGr
     return outgraph, labelling, partition, orbits
 end
 
-function densenauty(g::GraphType, options = DEFAULTOPTIONS_GRAPH) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+function densenauty(g::GraphType, options = DEFAULTOPTIONS_GRAPH) where GraphType <: LightGraphs.AbstractGraph
     return densenauty(lg_to_nauty(g), options)
 end
 
@@ -280,11 +280,11 @@ end
 
 
 """
-    lg_to_nauty(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
+    lg_to_nauty(g::LightGraphs.AbstractGraph)
 
 Convert to nauty-compatible adjacency matrix (uint array).
 """
-function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
     # Nauty compatible adjacency matrix:
     #   An array of m*n WORDSIZE bitfields.
     #   Where n = num vertices, m = num_setwords = ((n-1) / WORDSIZE) + 1
@@ -301,7 +301,7 @@ function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.A
 
     # Columns and rows reversed because I care about the column/row layout of
     # arr.chunks, not arr.
-    for (rowi, row) in enumerate(g.fadjlist)
+    for (rowi, row) in enumerate(fadjlist(g))
         for value in row
             arr[end-value+1,rowi] = true
         end
@@ -310,6 +310,16 @@ function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.A
     # nauty_graph as a vector of UInt64s, just what Nauty wants.
     # For the purposes of ccall, an Array{T} can be reasonably safely treated as Ptr{T}
     return arr.chunks #, num_setwords, num_vertices
+end
+
+function fadjlist(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
+    return g.fadjlist
+end
+
+import MetaGraphs
+
+function fadjlist(g::GraphType) where GraphType <: MetaGraphs.AbstractMetaGraph
+    return g.graph.fadjlist
 end
 
 """
