@@ -236,6 +236,22 @@ function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.Abstr
     return nautyreturn(outgraph, labelling, partition, orbits, stats)
 end
 
+function baked_canonical_form_color(g::GraphType,labelling, partition) where GraphType <: LightGraphs.AbstractGraph
+    g = lg_to_nauty(g)
+    (num_vertices, num_setwords) = size(g, 1, 2)
+    stats = statsblk()
+
+    # These don't need to be zero'd, I'm just doing it for debugging reasons.
+    outgraph = zeros(g)
+    orbits = zeros(labelling)
+
+    ccall((:baked_options_color, LIB_FILE), Void,
+          (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, stats, num_setwords, num_vertices, outgraph)
+
+    # Return everything nauty gives us.
+    return nautyreturn(outgraph, labelling, partition, orbits, stats)
+end
+
 function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
     g = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(g, 1, 2)
