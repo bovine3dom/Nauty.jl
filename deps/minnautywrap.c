@@ -25,7 +25,7 @@ void baked_options_color(graph *g, int *canonical_labelling, int *partition, int
 	DEFAULTOPTIONS_GRAPH(options);
 	options.getcanon = 1;
 	options.digraph = 1;
-	options.defaultptn = 1;
+	options.defaultptn = 0;
 
 	return densenauty(g, canonical_labelling, partition, orbits, &options, stats, num_setwords, num_vertices, canonical_graph);
 }
