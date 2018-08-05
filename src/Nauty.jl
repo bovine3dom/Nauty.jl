@@ -63,26 +63,26 @@ const Nboolean = Cint
     defaultptn::Nboolean      # set lab,ptn,active for single cell?
     cartesian::Nboolean       # use cartesian rep for writing automs?
     linelength::Cint          # max chars/line (excl. '\n') for output
-    outfile::Ptr{Void}        # FILE *outfile;                                            # file for output, if any
-    userrefproc::Ptr{Void}    # void (*userrefproc)                                       # replacement for usual refine procedure
+    outfile::Ptr{Nothing}        # FILE *outfile;                                            # file for output, if any
+    userrefproc::Ptr{Nothing}    # void (*userrefproc)                                       # replacement for usual refine procedure
                               # (graph*,int*,int*,int,int*,int*,set*,int*,int,int);
-    userautomproc::Ptr{Void}  # void (*userautomproc)                                     # procedure called for each automorphism
+    userautomproc::Ptr{Nothing}  # void (*userautomproc)                                     # procedure called for each automorphism
                               # (int,int*,int*,int,int,int);
-    userlevelproc::Ptr{Void}  # void (*userlevelproc)                                     # procedure called for each level
+    userlevelproc::Ptr{Nothing}  # void (*userlevelproc)                                     # procedure called for each level
                               # (int*,int*,int,int*,statsblk*,int,int,int,int,int,int);
-    usernodeproc::Ptr{Void}   # void (*usernodeproc)                                      # procedure called for each node
+    usernodeproc::Ptr{Nothing}   # void (*usernodeproc)                                      # procedure called for each node
                               # (graph*,int*,int*,int,int,int,int,int,int);
-    usercanonproc::Ptr{Void}  # Cint  (*usercanonproc)                                    # procedure called for better labellings
+    usercanonproc::Ptr{Nothing}  # Cint  (*usercanonproc)                                    # procedure called for better labellings
                               # (graph*,int*,graph*,int,int,int,int);
-    invarproc::Ptr{Void}      # void (*invarproc)                                         # procedure to compute vertex-invariant
+    invarproc::Ptr{Nothing}      # void (*invarproc)                                         # procedure to compute vertex-invariant
                               # (graph*,int*,int*,int,int,int,int*,int,Nboolean,int,int);
     tc_level::Cint            # max level for smart target cell choosing
     mininvarlevel::Cint       # min level for invariant computation
     maxinvarlevel::Cint       # max level for invariant computation
     invararg::Cint            # value passed to (*invarproc)()
-    dispatch::Ptr{Void}       # dispatchvec *dispatch;                                    # vector of object-specific routines
+    dispatch::Ptr{Nothing}       # dispatchvec *dispatch;                                    # vector of object-specific routines
     schreier::Nboolean        # use random schreier method
-    extra_options::Ptr{Void}  # void *extra_options;                                      # arbitrary extra options
+    extra_options::Ptr{Nothing}  # void *extra_options;                                      # arbitrary extra options
 end
 
 """
@@ -188,8 +188,8 @@ Equivalent to densenauty(lg_to_nauty(g), options).
 """
 function densenauty(g::NautyGraph,
                     options = DEFAULTOPTIONS_GRAPH,
-                    labelling = nothing::Union{Void, Array{Cint}},
-                    partition = nothing::Union{Void, Array{Cint}})
+                    labelling = nothing::Union{Nothing, Array{Cint}},
+                    partition = nothing::Union{Nothing, Array{Cint}})
 
     (num_vertices, num_setwords) = size(g, 1, 2)
     stats = statsblk()
@@ -203,14 +203,14 @@ function densenauty(g::NautyGraph,
         #= labelling = Array{Cint}(size(num_vertices)) =#
         #= partition = Array{Cint}(size(num_vertices)) =#
         labelling = zeros(Cint, size(g))
-        partition = zeros(labelling)
+        partition = zero(labelling)
     end
 
     # These don't need to be zero'd, I'm just doing it for debugging reasons.
-    outgraph = zeros(g)
-    orbits = zeros(labelling)
+    outgraph = zero(g)
+    orbits = zero(labelling)
 
-    ccall((:densenauty, LIB_FILE), Void,
+    ccall((:densenauty, LIB_FILE), Nothing,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{optionblk}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, options, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
@@ -219,17 +219,17 @@ end
 
 function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
     g = lg_to_nauty(g)
-    (num_vertices, num_setwords) = size(g, 1, 2)
+    (num_vertices, num_setwords) = (size(g, 1),size(g, 2))
     stats = statsblk()
 
     labelling = zeros(Cint, size(g))
-    partition = zeros(labelling)
+    partition = zero(labelling)
 
     # These don't need to be zero'd, I'm just doing it for debugging reasons.
-    outgraph = zeros(g)
-    orbits = zeros(labelling)
+    outgraph = zero(g)
+    orbits = zero(labelling)
 
-    ccall((:baked_options, LIB_FILE), Void,
+    ccall((:baked_options, LIB_FILE), Nothing,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
@@ -242,10 +242,10 @@ function baked_canonical_form_color(g::GraphType,labelling, partition) where Gra
     stats = statsblk()
 
     # These don't need to be zero'd, I'm just doing it for debugging reasons.
-    outgraph = zeros(g)
-    orbits = zeros(labelling)
+    outgraph = zero(g)
+    orbits = zero(labelling)
 
-    ccall((:baked_options_color, LIB_FILE), Void,
+    ccall((:baked_options_color, LIB_FILE), Nothing,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
@@ -257,13 +257,13 @@ function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGr
     (num_vertices, num_setwords) = size(g, 1, 2)
 
     labelling = zeros(Cint, size(g))
-    partition = zeros(labelling)
+    partition = zero(labelling)
 
     # These don't need to be zero'd, I'm just doing it for debugging reasons.
-    outgraph = zeros(g)
-    orbits = zeros(labelling)
+    outgraph = zero(g)
+    orbits = zero(labelling)
 
-    ccall((:baked_options_and_stats, LIB_FILE), Void,
+    ccall((:baked_options_and_stats, LIB_FILE), Nothing,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
@@ -312,7 +312,7 @@ function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
     num_setwords = div(num_vertices - 1, WORDSIZE) + 1
 
     # Initialise
-    arr = BitArray(num_setwords * WORDSIZE, num_vertices)
+    arr = BitArray(undef, num_setwords * WORDSIZE, num_vertices)
     fill!(arr, false)
 
     # Columns and rows reversed because I care about the column/row layout of
@@ -344,7 +344,7 @@ end
 Convert a nauty canonical label to an adjacency matrix.
 """
 function label_to_adj(label)
-    temp = BitArray(WORDSIZE,size(label,1))
+    temp = BitArray(undef,WORDSIZE,size(label,1))
     temp.chunks = label
     temparr = Array{Int64,2}(temp[end-size(label,1)+1:end,:])
     flipdim(temparr',2)
