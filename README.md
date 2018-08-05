@@ -2,6 +2,8 @@
 
 Simple wrapper for using `nauty`, a graph isomorphism package, with `LightGraphs` in Julia. Requires `gcc` and a POSIX style build environment.
 
+**Currently under development. Interface may change / break by the day.**
+
 ## Example usage
 
 Check if two graphs are isomorphs of each other:
