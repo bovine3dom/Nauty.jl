@@ -3,6 +3,12 @@
 "Julia wrapper for the Nauty C library."
 module Nauty
 
+@static if VERSION < v"0.7.0-DEV.2005"
+    Nothing = Base.Void
+    Base.BitArray(x, y...) = BitArray(y...)
+    undef = Base.Void
+end
+
 import LightGraphs
 
 const LIB_FILE = "$(@__DIR__)" * "/../deps/minnautywrap"
@@ -191,7 +197,11 @@ function densenauty(g::NautyGraph,
                     labelling = nothing::Union{Nothing, Array{Cint}},
                     partition = nothing::Union{Nothing, Array{Cint}})
 
-    (num_vertices, num_setwords) = size(g, 1, 2)
+    @static if VERSION < v"0.7.0-DEV.2005"
+        (num_vertices, num_setwords) = (size(g, 1),size(g, 2))
+    else
+        (num_vertices, num_setwords) = size(g, 1, 2)
+    end
     stats = statsblk()
 
     # labelling and partition must be defined if defaultptn is not set and must not be defined if they are.
