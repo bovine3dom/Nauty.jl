@@ -4,11 +4,12 @@ using BenchmarkTools
 const n = Nauty
 @static if VERSION < v"0.7.0-DEV.2005"
     using Base.Test
+    using LinearAlgebra
 else
     using Test
 end
 
-helper(x) = LightGraphs.Graph(x .| x')
+helper(x) = LightGraphs.Graph(Symmetric(x))
 iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
 @testset begin
    "Convert the adjacency matrix of a directed graph into an undirected graph."
