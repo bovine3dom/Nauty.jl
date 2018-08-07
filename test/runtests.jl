@@ -33,5 +33,5 @@ iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
 
 end
 
-println("The following should take about 7 microseconds:")
+info("The following should take about 7 microseconds:")
 @show @benchmark n.canonical_form(iso1a).canong
