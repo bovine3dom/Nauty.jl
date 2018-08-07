@@ -4,16 +4,18 @@ using BenchmarkTools
 const n = Nauty
 @static if VERSION < v"0.7.0-DEV.2005"
     using Base.Test
+    macro info(x...)
+        info(x...)
+    end
 else
     using Test
     using LinearAlgebra
 end
 
-helper(x) = LightGraphs.Graph(Symmetric(x))
+"Convert the adjacency matrix of a directed graph into an undirected graph."
+helper(x) = LightGraphs.Graph(x .| x')
 iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
 @testset begin
-   "Convert the adjacency matrix of a directed graph into an undirected graph."
-
    # Two simple isomorphic graphs.
    iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
 
@@ -28,10 +30,10 @@ iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
    @test n.lg_to_nauty(diso1b) == Array{UInt64,1}([0x0000000000000000, 0xa000000000000000, 0x0000000000000000])
 
    # This indirectly tests densenauty(), optionblk(), optionblk_mutable(), lg_to_nauty()
-   @test n.canonical_form(iso1a).canong == n.canonical_form(iso1b).canong
-   @test n.canonical_form(diso1a).canong == n.canonical_form(diso1b).canong
+   @test n.baked_canonical_form(iso1a).canong == n.baked_canonical_form(iso1b).canong
+   @test n.baked_canonical_form(diso1a).canong == n.baked_canonical_form(diso1b).canong
 
 end
 
-info("The following should take about 7 microseconds:")
-@show @benchmark n.canonical_form(iso1a).canong
+@info "The following should take about 1 microsecond:"
+@show @benchmark n.baked_canonical_form(iso1a).canong

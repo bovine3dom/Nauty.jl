@@ -197,11 +197,11 @@ function densenauty(g::NautyGraph,
                     labelling = nothing::Union{Nothing, Array{Cint}},
                     partition = nothing::Union{Nothing, Array{Cint}})
 
-    @static if VERSION < v"0.7.0-DEV.2005"
+    #= @static if VERSION < v"0.7.0-DEV.2005" =#
+    #=     (num_vertices, num_setwords) = size(g, 1, 2) =#
+    #= else =#
         (num_vertices, num_setwords) = (size(g, 1),size(g, 2))
-    else
-        (num_vertices, num_setwords) = size(g, 1, 2)
-    end
+    #= end =#
     stats = statsblk()
 
     # labelling and partition must be defined if defaultptn is not set and must not be defined if they are.
