@@ -3,6 +3,8 @@
 "Julia wrapper for the Nauty C library."
 module Nauty
 
+export has_isomorph, NautyAlg
+
 @static if VERSION < v"0.7.0-DEV.2005"
     Nothing = Base.Void
     Base.BitArray(x, y...) = BitArray(y...)
@@ -10,6 +12,8 @@ module Nauty
 end
 
 import LightGraphs
+
+struct NautyAlg <: LightGraphs.Experimental.IsomorphismAlgorithm end
 
 const LIB_FILE = "$(@__DIR__)" * "/../deps/minnautywrap"
 
@@ -406,5 +410,13 @@ end
 #=   :($(x.name.primary)($([name == F ? :(p.second) : :(x.$name) =#
 #=                          for name in fieldnames(x)]...))) =#
 #= end =#
+
+function LightGraphs.Experimental.has_isomorph(alg::NautyAlg, g1::LightGraphs.AbstractGraph, g2::LightGraphs.AbstractGraph;
+                         vertex_relation::Union{Nothing, Function}=nothing,
+                         edge_relation::Union{Nothing, Function}=nothing)::Bool
+    !LightGraphs.Experimental.could_have_isomorph(g1, g2) && return false
+    
+    baked_canonical_form(g1).canong == baked_canonical_form(g2).canong
+end
 
 end
