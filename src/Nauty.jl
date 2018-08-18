@@ -6,7 +6,7 @@ module Nauty
 export has_isomorph, NautyAlg
 
 @static if VERSION < v"0.7.0-DEV.2005"
-    Nothing = Base.Void
+    Cvoid = Base.Void
     Base.BitArray(x, y...) = BitArray(y...)
     undef = Base.Void
 end
@@ -73,26 +73,26 @@ const Nboolean = Cint
     defaultptn::Nboolean      # set lab,ptn,active for single cell?
     cartesian::Nboolean       # use cartesian rep for writing automs?
     linelength::Cint          # max chars/line (excl. '\n') for output
-    outfile::Ptr{Nothing}        # FILE *outfile;                                            # file for output, if any
-    userrefproc::Ptr{Nothing}    # void (*userrefproc)                                       # replacement for usual refine procedure
+    outfile::Ptr{Cvoid}        # FILE *outfile;                                            # file for output, if any
+    userrefproc::Ptr{Cvoid}    # void (*userrefproc)                                       # replacement for usual refine procedure
                               # (graph*,int*,int*,int,int*,int*,set*,int*,int,int);
-    userautomproc::Ptr{Nothing}  # void (*userautomproc)                                     # procedure called for each automorphism
+    userautomproc::Ptr{Cvoid}  # void (*userautomproc)                                     # procedure called for each automorphism
                               # (int,int*,int*,int,int,int);
-    userlevelproc::Ptr{Nothing}  # void (*userlevelproc)                                     # procedure called for each level
+    userlevelproc::Ptr{Cvoid}  # void (*userlevelproc)                                     # procedure called for each level
                               # (int*,int*,int,int*,statsblk*,int,int,int,int,int,int);
-    usernodeproc::Ptr{Nothing}   # void (*usernodeproc)                                      # procedure called for each node
+    usernodeproc::Ptr{Cvoid}   # void (*usernodeproc)                                      # procedure called for each node
                               # (graph*,int*,int*,int,int,int,int,int,int);
-    usercanonproc::Ptr{Nothing}  # Cint  (*usercanonproc)                                    # procedure called for better labellings
+    usercanonproc::Ptr{Cvoid}  # Cint  (*usercanonproc)                                    # procedure called for better labellings
                               # (graph*,int*,graph*,int,int,int,int);
-    invarproc::Ptr{Nothing}      # void (*invarproc)                                         # procedure to compute vertex-invariant
+    invarproc::Ptr{Cvoid}      # void (*invarproc)                                         # procedure to compute vertex-invariant
                               # (graph*,int*,int*,int,int,int,int*,int,Nboolean,int,int);
     tc_level::Cint            # max level for smart target cell choosing
     mininvarlevel::Cint       # min level for invariant computation
     maxinvarlevel::Cint       # max level for invariant computation
     invararg::Cint            # value passed to (*invarproc)()
-    dispatch::Ptr{Nothing}       # dispatchvec *dispatch;                                    # vector of object-specific routines
+    dispatch::Ptr{Cvoid}       # dispatchvec *dispatch;                                    # vector of object-specific routines
     schreier::Nboolean        # use random schreier method
-    extra_options::Ptr{Nothing}  # void *extra_options;                                      # arbitrary extra options
+    extra_options::Ptr{Cvoid}  # void *extra_options;                                      # arbitrary extra options
 end
 
 """
@@ -198,8 +198,8 @@ Equivalent to densenauty(lg_to_nauty(g), options).
 """
 function densenauty(g::NautyGraph,
                     options = DEFAULTOPTIONS_GRAPH,
-                    labelling = nothing::Union{Nothing, Array{Cint}},
-                    partition = nothing::Union{Nothing, Array{Cint}})
+                    labelling = nothing::Union{Cvoid, Array{Cint}},
+                    partition = nothing::Union{Cvoid, Array{Cint}})
 
     #= @static if VERSION < v"0.7.0-DEV.2005" =#
     #=     (num_vertices, num_setwords) = size(g, 1, 2) =#
@@ -224,7 +224,7 @@ function densenauty(g::NautyGraph,
     outgraph = zero(g)
     orbits = zero(labelling)
 
-    ccall((:densenauty, LIB_FILE), Nothing,
+    ccall((:densenauty, LIB_FILE), Cvoid,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{optionblk}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, options, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
@@ -243,7 +243,7 @@ function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.Abstr
     outgraph = zero(g)
     orbits = zero(labelling)
 
-    ccall((:baked_options, LIB_FILE), Nothing,
+    ccall((:baked_options, LIB_FILE), Cvoid,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
@@ -259,7 +259,7 @@ function baked_canonical_form_color(g::GraphType,labelling, partition) where Gra
     outgraph = zero(g)
     orbits = zero(labelling)
 
-    ccall((:baked_options_color, LIB_FILE), Nothing,
+    ccall((:baked_options_color, LIB_FILE), Cvoid,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
@@ -277,7 +277,7 @@ function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGr
     outgraph = zero(g)
     orbits = zero(labelling)
 
-    ccall((:baked_options_and_stats, LIB_FILE), Nothing,
+    ccall((:baked_options_and_stats, LIB_FILE), Cvoid,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
@@ -412,8 +412,8 @@ end
 #= end =#
 
 function LightGraphs.Experimental.has_isomorph(alg::NautyAlg, g1::LightGraphs.AbstractGraph, g2::LightGraphs.AbstractGraph;
-                         vertex_relation::Union{Nothing, Function}=nothing,
-                         edge_relation::Union{Nothing, Function}=nothing)::Bool
+                         vertex_relation::Union{Cvoid, Function}=nothing,
+                         edge_relation::Union{Cvoid, Function}=nothing)::Bool
     !LightGraphs.Experimental.could_have_isomorph(g1, g2) && return false
     
     baked_canonical_form(g1).canong == baked_canonical_form(g2).canong
