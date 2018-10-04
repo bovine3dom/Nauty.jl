@@ -12,6 +12,13 @@ Check if two graphs are isomorphs of each other:
 baked_canonical_form(g1).canong == baked_canonical_form(g2).canong
 ```
 
+LightGraphs interface:
+
+```julia
+using Nauty
+BenchmarkTools.@btime LightGraphs.Experimental.has_isomorph(g1,g2,alg=NautyAlg())
+```
+
 If you need to provide custom options to nauty, use `densenauty(g, optionblk(optionblk_mutable(DEFAULTOPTIONS_GRAPH)))`, but be aware that it is around 2-4x slower than using baked in options as Julia cannot optimise across the `C` boundary. Consider baking your own. 
 
 ## Todo
