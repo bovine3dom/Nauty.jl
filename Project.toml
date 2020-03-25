@@ -1,0 +1,17 @@
+name = "Nauty"
+uuid = "078ca17e-7fb0-5a15-af2c-e86ea292e9a4"
+
+[deps]
+IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+
+[extras]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[targets]
+test = ["Test", "BenchmarkTools", "IterTools", "LightGraphs", "LinearAlgebra"]
