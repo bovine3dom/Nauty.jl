@@ -15,7 +15,7 @@ import LightGraphs
 
 struct NautyAlg <: LightGraphs.Experimental.IsomorphismAlgorithm end
 
-const LIB_FILE = "$(@__DIR__)" * "/../deps/minnautywrap"
+const LIB_FILE = "$(@__DIR__)" * "/../deps/minnautywrap.so"
 
 const WORDSIZE = ccall((:wordsize, LIB_FILE), Int, ())
 
