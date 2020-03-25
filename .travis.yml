@@ -1,0 +1,6 @@
+language: julia
+julia:
+  - 1
+
+env: 
+  - JULIA_NUM_THREADS=2
