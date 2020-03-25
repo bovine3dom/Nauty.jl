@@ -11,11 +11,18 @@ export has_isomorph, NautyAlg
     undef = Base.Void
 end
 
+using Libdl: dlext
 import LightGraphs
 
 struct NautyAlg <: LightGraphs.Experimental.IsomorphismAlgorithm end
 
-const LIB_FILE = "$(@__DIR__)" * "/../deps/minnautywrap.so"
+function depsdir(pkg::AbstractString)
+    pkgdir = Base.find_package(pkg)
+    pkgdir = abspath(joinpath(dirname(pkgdir), "..", "deps"))
+    return pkgdir
+end
+
+const LIB_FILE = joinpath(depsdir("Nauty"), "minnautywrap." * dlext) 
 
 const WORDSIZE = ccall((:wordsize, LIB_FILE), Int, ())
 
