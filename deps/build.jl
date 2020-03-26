@@ -5,8 +5,7 @@ function packagedir(pkg::AbstractString)
     if endswith(pkg, ".jl")
         pkg = pkg[1:end-3]
     end
-    pkgnautywrap = joinpath(depsdir, "minnautywrap." * Libdl.dlext)
-    dir = Base.find_package(pkg)
+    pkgdir = Base.find_package(pkg)
     isnothing(pkgdir) && throw(ErrorException("package \"$pkg\" not found"))              
     pkgdir = abspath(joinpath(dirname(pkgdir), ".."))
     return pkgdir
