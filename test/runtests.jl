@@ -44,5 +44,5 @@ iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
    end
 end
 
-@info "The following should take about 1 microsecond:"
+@info "The following should take about 1.5 microseconds:"
 @show @benchmark n.baked_canonical_form(iso1a).canong
