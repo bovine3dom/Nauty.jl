@@ -34,8 +34,8 @@ it is necessary to check they are correct.
 
 /* Note that the following is only for running nauty in multiple threads
    and will slow it down a little otherwise. */
-#define HAVE_TLS 0   /* have storage attribute for thread-local */
-#define TLS_ATTR   /* if so, what it is.  if not, empty */
+#define HAVE_TLS 1   /* have storage attribute for thread-local */
+#define TLS_ATTR __thread  /* if so, what it is.  if not, empty */
 
 #define USE_ANSICONTROLS 0 
                           /* whether --enable-ansicontrols is used */

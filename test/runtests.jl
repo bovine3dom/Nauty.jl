@@ -1,6 +1,9 @@
 import Nauty
 import LightGraphs
 using BenchmarkTools
+using PerformanceTestTools: @include_foreach
+
+
 const n = Nauty
 @static if VERSION < v"0.7.0-DEV.2005"
     using Base.Test
@@ -14,6 +17,7 @@ end
 
 "Convert the adjacency matrix of a directed graph into an undirected graph."
 helper(x) = LightGraphs.Graph(x .| x')
+
 iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
 @testset begin
    # Two simple isomorphic graphs.
@@ -33,7 +37,12 @@ iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
    @test n.baked_canonical_form(iso1a).canong == n.baked_canonical_form(iso1b).canong
    @test n.baked_canonical_form(diso1a).canong == n.baked_canonical_form(diso1b).canong
 
+   @static if VERSION > v"1.3.0"
+      @testset "Multithreading" begin
+         @include_foreach("threading-test.jl", [["JULIA_NUM_THREADS" => "10"]])
+      end
+   end
 end
 
-@info "The following should take about 1 microsecond:"
+@info "The following should take about 1.5 microseconds:"
 @show @benchmark n.baked_canonical_form(iso1a).canong
