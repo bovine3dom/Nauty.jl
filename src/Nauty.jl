@@ -112,17 +112,22 @@ Not an inner constructor any more because I don't want to override default const
 const optionblk() = ccall((:defaultoptions_graph, LIB_FILE), optionblk, ())
 const optionblk_mutable() = optionblk_mutable(optionblk())
 
-function pprintobject(name, obj, sep=", ")
-  print("$name(")
-  print(join(map(fn -> "$fn=$(getfield(obj, fn))", fieldnames(obj)), sep))
-  print(")")
+"""
+    pprintobject(io, obj::T) where T
+
+Print `obj` to `io` showing its fieldnames.
+"""
+function pprintobject(io, obj::T) where T
+  println(io, T, '(')
+  println(io, join(map(fn -> "    $fn=$(getfield(obj, fn))", fieldnames(T)), ",\n"))
+  println(io, ')')
 end
 
 function Base.show(io::IO, ::MIME"text/plain", options::Nauty.optionblk)
-    pprintobject("optionblk", options)
+    pprintobject(io, options)
 end
 function Base.show(io::IO, ::MIME"text/plain", options::Nauty.optionblk_mutable)
-    pprintobject("optionblk_mutable", options)
+    pprintobject(io, options)
 end
 
 struct statsblk
