@@ -73,33 +73,33 @@ end
 const Nboolean = Cint
 
 @define_mutable struct optionblk
-    getcanon::Cint            # make canong and canonlab?
+    getcanon::Nboolean        # make canong and canonlab?
     digraph::Nboolean         # multiple edges or loops?
     writeautoms::Nboolean     # write automorphisms?
     writemarkers::Nboolean    # write stats on pts fixed, etc.?
     defaultptn::Nboolean      # set lab,ptn,active for single cell?
     cartesian::Nboolean       # use cartesian rep for writing automs?
     linelength::Cint          # max chars/line (excl. '\n') for output
-    outfile::Ptr{Cvoid}        # FILE *outfile;                                            # file for output, if any
-    userrefproc::Ptr{Cvoid}    # void (*userrefproc)                                       # replacement for usual refine procedure
+    outfile::Ptr{Cvoid}       # FILE *outfile;                                            # file for output, if any
+    userrefproc::Ptr{Cvoid}   # void (*userrefproc)                                       # replacement for usual refine procedure
                               # (graph*,int*,int*,int,int*,int*,set*,int*,int,int);
-    userautomproc::Ptr{Cvoid}  # void (*userautomproc)                                     # procedure called for each automorphism
+    userautomproc::Ptr{Cvoid} # void (*userautomproc)                                     # procedure called for each automorphism
                               # (int,int*,int*,int,int,int);
-    userlevelproc::Ptr{Cvoid}  # void (*userlevelproc)                                     # procedure called for each level
+    userlevelproc::Ptr{Cvoid} # void (*userlevelproc)                                     # procedure called for each level
                               # (int*,int*,int,int*,statsblk*,int,int,int,int,int,int);
-    usernodeproc::Ptr{Cvoid}   # void (*usernodeproc)                                      # procedure called for each node
+    usernodeproc::Ptr{Cvoid}  # void (*usernodeproc)                                      # procedure called for each node
                               # (graph*,int*,int*,int,int,int,int,int,int);
-    usercanonproc::Ptr{Cvoid}  # Cint  (*usercanonproc)                                    # procedure called for better labellings
+    usercanonproc::Ptr{Cvoid} # Cint  (*usercanonproc)                                    # procedure called for better labellings
                               # (graph*,int*,graph*,int,int,int,int);
-    invarproc::Ptr{Cvoid}      # void (*invarproc)                                         # procedure to compute vertex-invariant
+    invarproc::Ptr{Cvoid}     # void (*invarproc)                                         # procedure to compute vertex-invariant
                               # (graph*,int*,int*,int,int,int,int*,int,Nboolean,int,int);
     tc_level::Cint            # max level for smart target cell choosing
     mininvarlevel::Cint       # min level for invariant computation
     maxinvarlevel::Cint       # max level for invariant computation
     invararg::Cint            # value passed to (*invarproc)()
-    dispatch::Ptr{Cvoid}       # dispatchvec *dispatch;                                    # vector of object-specific routines
+    dispatch::Ptr{Cvoid}      # dispatchvec *dispatch;                                    # vector of object-specific routines
     schreier::Nboolean        # use random schreier method
-    extra_options::Ptr{Cvoid}  # void *extra_options;                                      # arbitrary extra options
+    extra_options::Ptr{Cvoid} # void *extra_options;                                      # arbitrary extra options
 end
 
 """
