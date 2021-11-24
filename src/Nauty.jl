@@ -50,10 +50,10 @@ macro define_mutable(immutable_struct)
 
     constructors = quote
         function $mutable_name(x::$immutable_name)
-            $mutable_name(ntuple(i->getfield(x, i), nfields($immutable_name))...)
+            $mutable_name(ntuple(i->getfield(x, i), length(fieldnames($immutable_name)))...)
         end
         function $immutable_name(x::$mutable_name)
-            $immutable_name(ntuple(i->getfield(x, i), nfields($mutable_name))...)
+            $immutable_name(ntuple(i->getfield(x, i), length(fieldnames($mutable_name)))...)
         end
     end
 
