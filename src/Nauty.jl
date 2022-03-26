@@ -148,7 +148,7 @@ end
 
 const statsblk() = statsblk(zeros(13)...)
 function Base.show(io::IO, ::MIME"text/plain", stats::Nauty.statsblk)
-    pprintobject("statsblk", stats)
+    pprintobject(io, stats)
 end
 
 # }}}
@@ -193,7 +193,7 @@ struct nautyreturn
     stats::statsblk
 end
 function Base.show(io::IO, ::MIME"text/plain", stats::nautyreturn)
-    pprintobject("nautyreturn", stats, "\n")
+    pprintobject(io, stats)
 end
 
 """
