@@ -200,7 +200,7 @@ function label_to_adj(label)
     temp = BitArray(undef,WORDSIZE,size(label,1))
     temp.chunks = label
     temparr = Array{Int64,2}(temp[end-size(label,1)+1:end,:])
-    flipdim(temparr',2)
+    reverse(temparr', dims=2)
 end
 
 """
