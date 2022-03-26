@@ -1,7 +1,13 @@
 #include <nauty.h>
+#include <nautinv.h>
 
 optionblk defaultoptions_graph() {
 	DEFAULTOPTIONS_GRAPH(options);
+	return options;
+}
+
+optionblk defaultoptions_digraph() {
+	DEFAULTOPTIONS_DIGRAPH(options);
 	return options;
 }
 
