@@ -18,11 +18,11 @@ end
 "Convert the adjacency matrix of a directed graph into an undirected graph."
 helper(x) = LightGraphs.Graph(x .| x')
 
-iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
-@testset begin
-   # Two simple isomorphic graphs.
-   iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
+# Two simple isomorphic graphs.
+const iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
+const iso1b = helper(Array([0 0 0; 1 0 1; 0 0 0]))
 
+@testset begin
    @test n.lg_to_nauty(iso1a) == Array{UInt64,1}([0x6000000000000000, 0x8000000000000000, 0x8000000000000000])
    @test n.lg_to_nauty(iso1b) == Array{UInt64,1}([0x4000000000000000, 0xa000000000000000, 0x4000000000000000])
 
@@ -44,9 +44,23 @@ iso1a = helper(Array([0 1 1; 0 0 0; 0 0 0]))
    end
 end
 
-@testset "Printing" begin
-   Base.show(IOBuffer(), n.densenauty(iso1a))
+@testset "New tests" begin
+   o = n.defaultoptions_graph()
+   o.getcanon = 1
+
+   rtn1a = n.densenauty(iso1a, o)
+   rtn1b = n.densenauty(iso1b, o)
+
+   @test rtn1a.canong == rtn1b.canong
+
+   # Test that we can print without throwing an error
+   Base.show(IOBuffer(), rtn1a)
    @test true
+
+   @testset "Debug aids" begin
+      @test n.label_to_adj(rtn1a.canong) == [0 0 1; 0 0 1; 1 1 0]
+      @test n.label_to_humanreadable(rtn1a.canong) == Int128[32, 32, 192]
+   end
 end
 
 @info "The following should take about 1.5 microseconds:"

@@ -231,25 +231,26 @@ function fadjlist(g::MetaGraphs.AbstractMetaGraph)
     fadjlist(g.graph)
 end
 
+# These are mislabeled, they actually take graphs
 """
-    label_to_adj(label)
+    label_to_adj(g)
 
-Convert a nauty canonical label to an adjacency matrix.
+Convert a nauty graph to an adjacency matrix.
 """
-function label_to_adj(label)
-    temp = BitArray(undef,WORDSIZE,size(label,1))
-    temp.chunks = label
-    temparr = Array{Int64,2}(temp[end-size(label,1)+1:end,:])
+function label_to_adj(g::NautyGraph)
+    temp = BitArray(undef,WORDSIZE,size(g,1))
+    temp.chunks = g
+    temparr = Array{Int64,2}(temp[end-size(g,1)+1:end,:])
     reverse(temparr', dims=2)
 end
 
 """
-    label_to_humanreadable(label::Array{UInt64})
+    label_to_humanreadable(g::NautyGraph)
 
-Convert a nauty label (an array of little-endian UInt64s) to something more readable.
+Convert a nauty graph (an array of little-endian UInt64s) to something more readable.
 """
-function label_to_humanreadable(label::Array{UInt64})
-    return @. Int128(hton(label))
+function label_to_humanreadable(g::NautyGraph)
+    return @. Int128(hton(g))
 end
 
 
