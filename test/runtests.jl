@@ -61,6 +61,21 @@ end
       @test n.label_to_adj(rtn1a.canong) == [0 0 1; 0 0 1; 1 1 0]
       @test n.label_to_humanreadable(rtn1a.canong) == Int128[32, 32, 192]
    end
+
+   @testset "Digraphs" begin
+      diso1a = LightGraphs.DiGraph(Array([0 1 1; 0 0 0; 0 0 0]))
+      diso1b = LightGraphs.DiGraph(Array([0 0 0; 1 0 1; 0 0 0]))
+      diso2a = LightGraphs.DiGraph(Array([0 0 0; 1 0 1; 1 0 0]))
+
+      function cf(g)
+         om = n.defaultoptions_digraph()
+         om.getcanon = 1
+         n.densenauty(g, om).canong
+      end
+
+      @test cf(diso1a) == cf(diso1b)
+      @test cf(diso1a) != cf(diso2a)
+   end
 end
 
 @info "The following should take about 1.5 microseconds:"
