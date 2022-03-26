@@ -50,4 +50,9 @@ end
 end
 
 @info "The following should take about 1.5 microseconds:"
-@show @benchmark n.baked_canonical_form(iso1a).canong
+Base.show(@benchmark n.baked_canonical_form(iso1a).canong)
+println()
+
+@info "And this is expected to take longer, if it doesn't then the baked methods can probably be removed:"
+Base.show(@benchmark n.densenauty(iso1a, n.GETCANON_OPTIONS_GRAPH).canong)
+println()

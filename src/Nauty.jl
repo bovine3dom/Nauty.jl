@@ -24,22 +24,53 @@ include("types.jl")
 
 const WORDSIZE = ccall((:wordsize, LIB_FILE), Int, ())
 
+# For small graphs, creating the optionblk may take as long as finding the
+# canonical form, so we do that work in advance.
+const DEFAULTOPTIONS_GRAPH = optionblk(defaultoptions_graph())
+const DEFAULTOPTIONS_DIGRAPH = optionblk(defaultoptions_digraph())
+const GETCANON_OPTIONS_GRAPH = let
+  o = defaultoptions_graph()
+  o.getcanon = 1
+  optionblk(o)
+end
+const GETCANON_OPTIONS_DIGRAPH = let
+  o = defaultoptions_digraph()
+  o.getcanon = 1
+  optionblk(o)
+end
+
 # Julia interface:
 
 """
     densenauty(g::NautyGraph
-               options = defaultoptions_graph(),
+               options = DEFAULTOPTIONS_GRAPH,
                labelling = zeros(Cint, size(g)),
                partition = zeros(labelling))
 
 Raw interface to nauty.c/densenauty. See section 6 (Calling nauty and Traces) of the nauty and Traces User's Guide for the authoritative definition of these parameters. Returns `NautyReturn`.
 
-    densenauty(g::LightGraphs.AbstractGraph, options = defaultoptions_graph())
+    densenauty(g::LightGraphs.SimpleGraph, options = DEFAULTOPTIONS_GRAPH)
+    densenauty(g::LightGraphs.SimpleDiGraph, options = DEFAULTOPTIONS_DIGRAPH)
 
 Equivalent to densenauty(lg_to_nauty(g), options).
+
+# Usage notes
+
+If you are calling this multiple times with smaller graphs, you may benefit from computing your `optionblk` just once:
+
+```julia
+o = Nauty.defaultoptions_graph()
+o.getcanon = 1
+o.writeautoms = 1
+o = optionblk(o) # This converts o from optionblk_mutable to optionblk
+
+results = [ Nauty.densenauty(g, o) for g in many_graphs ]
+```
+
+Note: Nauty is threadsafe, at least for normal use, so if you are calling it repeatedly with small graphs you may want to call it from multiple threads for a further speedup.
 """
 function densenauty(g::NautyGraph,
-                    options = defaultoptions_graph(),
+                    options = DEFAULTOPTIONS_GRAPH,
                     labelling = nothing::Union{Cvoid, Array{Cint}},
                     partition = nothing::Union{Cvoid, Array{Cint}})
 
@@ -72,6 +103,18 @@ function densenauty(g::NautyGraph,
     # Return everything nauty gives us.
     return NautyReturn(outgraph, labelling, partition, orbits, stats)
 end
+
+function densenauty(g::LightGraphs.SimpleGraph, options = DEFAULTOPTIONS_GRAPH)
+    return densenauty(lg_to_nauty(g), options)
+end
+
+function densenauty(g::LightGraphs.SimpleDiGraph, options = DEFAULTOPTIONS_DIGRAPH)
+    return densenauty(lg_to_nauty(g), options)
+end
+
+
+# Older stuff
+# The baked functions are still slightly faster, but the difference is not very noticeable any more.
 
 function baked_canonical_form(g::LightGraphs.AbstractGraph)
     g = lg_to_nauty(g)
@@ -126,10 +169,7 @@ function baked_canonical_form_and_stats(g::LightGraphs.AbstractGraph)
     return outgraph, labelling, partition, orbits
 end
 
-function densenauty(g::LightGraphs.AbstractGraph, options = defaultoptions_graph())
-    return densenauty(lg_to_nauty(g), options)
-end
-
+# Can probably remove this
 """
     canonical_form(g)
 
@@ -139,13 +179,13 @@ Equivalent to:
     o.getcanon = 1
     densenauty(g, o)
 
+Or:
+
+    densenauty(g, GETCANON_OPTIONS_GRAPH)
+
 Find the canonical graph, orbits, relabelling and orbits of `g`.
 """
-function canonical_form(g)
-    o = defaultoptions_graph()
-    o.getcanon = 1
-    densenauty(g, o)
-end
+canonical_form(g) = densenauty(g, GETCANON_OPTIONS_GRAPH)
 
 # {{{ Helpers
 

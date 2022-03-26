@@ -84,7 +84,7 @@ end
 defaultoptions_graph() = optionblk_mutable(ccall((:defaultoptions_graph, LIB_FILE), optionblk, ()))
 defaultoptions_digraph() = optionblk_mutable(ccall((:defaultoptions_digraph, LIB_FILE), optionblk, ()))
 
-@deprecate optionblk() defaultoptions_graph()
+@deprecate optionblk() optionblk(defaultoptions_graph())
 @deprecate optionblk_mutable() defaultoptions_graph()
 
 struct statsblk
