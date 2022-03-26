@@ -1,7 +1,9 @@
-# Nauty canonical form wrapper for julia.
-
 "Julia wrapper for the Nauty C library."
 module Nauty
+
+using Libdl: dlext
+import LightGraphs
+import MetaGraphs
 
 export has_isomorph, NautyAlg
 
@@ -11,202 +13,62 @@ export has_isomorph, NautyAlg
     undef = Base.Void
 end
 
-using Libdl: dlext
-import LightGraphs
-
-struct NautyAlg <: LightGraphs.Experimental.IsomorphismAlgorithm end
-
 function depsdir(pkg::AbstractString)
     pkgdir = Base.find_package(pkg)
-    pkgdir = abspath(joinpath(dirname(pkgdir), "..", "deps"))
-    return pkgdir
+    return abspath(joinpath(dirname(pkgdir), "..", "deps"))
 end
 
 const LIB_FILE = joinpath(depsdir("Nauty"), "minnautywrap." * dlext) 
 
+include("types.jl")
+
 const WORDSIZE = ccall((:wordsize, LIB_FILE), Int, ())
 
-# {{{ Types and structs
-
-# {{{ Julia versions of two important structs from nauty.h
-
-"""
-    define_mutable(immutable_struct)
-
-Define a mutable copy of a struct at the same time as the immutable one and add constructors to both to allow easy conversion.
-
-Required because mutable structs are not substitutable for C structs.
-
-Author: Michael Eastwood
-Source: https://discourse.julialang.org/t/passing-an-array-of-structures-through-ccall/5194/15
-"""
-macro define_mutable(immutable_struct)
-    immutable_name = immutable_struct.args[2]
-    mutable_name = Symbol(immutable_name, "_mutable")
-
-    mutable_struct = copy(immutable_struct)
-    mutable_struct.args[1] = true # set the mutability to true
-    mutable_struct.args[2] = mutable_name
-
-    constructors = quote
-        function $mutable_name(x::$immutable_name)
-            $mutable_name(ntuple(i->getfield(x, i), fieldcount($immutable_name))...)
-        end
-        function $immutable_name(x::$mutable_name)
-            $immutable_name(ntuple(i->getfield(x, i), fieldcount($mutable_name))...)
-        end
-    end
-
-    converters = quote
-        function Base.convert(::Type{$immutable_name}, mut::$mutable_name)
-          $immutable_name(mut)
-        end
-        function Base.convert(::Type{$mutable_name}, mut::$immutable_name)
-          $mutable_name(mut)
-        end
-    end
-
-    output = Expr(:block, immutable_struct, mutable_struct, constructors, converters)
-    esc(output)
+# For small graphs, creating the optionblk may take as long as finding the
+# canonical form, so we do that work in advance.
+# Sometimes these can cause problems because the constant in Julia's compiletime cache can become out of date with the built artifact.
+const DEFAULTOPTIONS_GRAPH = optionblk(defaultoptions_graph())
+const DEFAULTOPTIONS_DIGRAPH = optionblk(defaultoptions_digraph())
+const GETCANON_OPTIONS_GRAPH = let
+  o = defaultoptions_graph()
+  o.getcanon = 1
+  optionblk(o)
+end
+const GETCANON_OPTIONS_DIGRAPH = let
+  o = defaultoptions_digraph()
+  o.getcanon = 1
+  optionblk(o)
 end
 
-const Nboolean = Cint
-
-@define_mutable struct optionblk
-    getcanon::Nboolean        # make canong and canonlab?
-    digraph::Nboolean         # multiple edges or loops?
-    writeautoms::Nboolean     # write automorphisms?
-    writemarkers::Nboolean    # write stats on pts fixed, etc.?
-    defaultptn::Nboolean      # set lab,ptn,active for single cell?
-    cartesian::Nboolean       # use cartesian rep for writing automs?
-    linelength::Cint          # max chars/line (excl. '\n') for output
-    outfile::Ptr{Cvoid}       # FILE *outfile;                                            # file for output, if any
-    userrefproc::Ptr{Cvoid}   # void (*userrefproc)                                       # replacement for usual refine procedure
-                              # (graph*,int*,int*,int,int*,int*,set*,int*,int,int);
-    userautomproc::Ptr{Cvoid} # void (*userautomproc)                                     # procedure called for each automorphism
-                              # (int,int*,int*,int,int,int);
-    userlevelproc::Ptr{Cvoid} # void (*userlevelproc)                                     # procedure called for each level
-                              # (int*,int*,int,int*,statsblk*,int,int,int,int,int,int);
-    usernodeproc::Ptr{Cvoid}  # void (*usernodeproc)                                      # procedure called for each node
-                              # (graph*,int*,int*,int,int,int,int,int,int);
-    usercanonproc::Ptr{Cvoid} # Cint  (*usercanonproc)                                    # procedure called for better labellings
-                              # (graph*,int*,graph*,int,int,int,int);
-    invarproc::Ptr{Cvoid}     # void (*invarproc)                                         # procedure to compute vertex-invariant
-                              # (graph*,int*,int*,int,int,int,int*,int,Nboolean,int,int);
-    tc_level::Cint            # max level for smart target cell choosing
-    mininvarlevel::Cint       # min level for invariant computation
-    maxinvarlevel::Cint       # max level for invariant computation
-    invararg::Cint            # value passed to (*invarproc)()
-    dispatch::Ptr{Cvoid}      # dispatchvec *dispatch;                                    # vector of object-specific routines
-    schreier::Nboolean        # use random schreier method
-    extra_options::Ptr{Cvoid} # void *extra_options;                                      # arbitrary extra options
-end
-
-"""
-# Constructor. Normally default options wouldn't be set by an inner
-# constructor, but in this case the nauty manual requires that all
-# optionblks be constructed by calling the macro.
-
-Not an inner constructor any more because I don't want to override default constructor...
-"""
-const optionblk() = ccall((:defaultoptions_graph, LIB_FILE), optionblk, ())
-const optionblk_mutable() = optionblk_mutable(optionblk())
-
-"""
-    pprintobject(io, obj::T) where T
-
-Print `obj` to `io` showing its fieldnames.
-"""
-function pprintobject(io, obj::T) where T
-  println(io, T, '(')
-  println(io, join(map(fn -> "    $fn=$(getfield(obj, fn))", fieldnames(T)), ",\n"))
-  println(io, ')')
-end
-
-function Base.show(io::IO, ::MIME"text/plain", options::Nauty.optionblk)
-    pprintobject(io, options)
-end
-function Base.show(io::IO, ::MIME"text/plain", options::Nauty.optionblk_mutable)
-    pprintobject(io, options)
-end
-
-struct statsblk
-    grpsize1::Cdouble        # /* size of group is */
-    grpsize2::Cint           # /* grpsize1 * 10^grpsize2 */
-    numorbits::Cint          # /* number of orbits in group */
-    numgenerators::Cint      # /* number of generators found */
-    errstatus::Cint          # /* if non-zero : an error code */
-    numnodes::Culong         # /* total number of nodes */
-    numbadleaves::Culong     # /* number of leaves of no use */
-    maxlevel::Cint           # /* maximum depth of search */
-    tctotal::Culong          # /* total size of all target cells */
-    canupdates::Culong       # /* number of updates of best label */
-    invapplics::Culong       # /* number of applications of invarproc */
-    invsuccesses::Culong     # /* number of successful uses of invarproc() */
-    invarsuclevel::Cint      # /* least level where invarproc worked */
-end
-
-const statsblk() = statsblk(zeros(13)...)
-function Base.show(io::IO, ::MIME"text/plain", stats::Nauty.statsblk)
-    pprintobject("statsblk", stats)
-end
-
-# }}}
-
-const NautyGraph = Array{UInt64}
-const NautyGraphC = Ptr{UInt64}
-
-# }}}
-
-const DEFAULTOPTIONS_GRAPH = optionblk()
-
-# Interface:
-
-"""
-    canong::NautyGraph
-
-The canonical graph of the class of isomorphs that g is in. Only meaningful if
-options.getcanon was 1
-
-    labelling::Array{Cint}
-
-if options.getcanon = 1, then this is the vertices of g in the order that they
-should be relabelled to give canonical_graph.
-
-    partition::Array{Cint}
-
-colouring information for labels
-
-    orbits::Array{Cint}
-
-Orbits of the automorphism group
-
-    stats::statsblk
-
-stats related to the Nauty run
-"""
-struct nautyreturn
-    canong::NautyGraph
-    labels::Array{Cint}
-    partition::Array{Cint}
-    orbits::Array{Cint}
-    stats::statsblk
-end
-function Base.show(io::IO, ::MIME"text/plain", stats::nautyreturn)
-    pprintobject("nautyreturn", stats, "\n")
-end
+# Julia interface:
 
 """
     densenauty(g::NautyGraph
-                    options = optionblk(),
-                    labelling = zeros(Cint, size(g)),
-                    partition = zeros(labelling))
+               options = DEFAULTOPTIONS_GRAPH,
+               labelling = zeros(Cint, size(g)),
+               partition = zeros(labelling))
 
-Raw interface to nauty.c/densenauty. See section 6 (Calling nauty and Traces) of the nauty and Traces User's Guide for the authoritative definition of these parameters. Returns `nautyreturn`.
+Raw interface to nauty.c/densenauty. See section 6 (Calling nauty and Traces) of the nauty and Traces User's Guide for the authoritative definition of these parameters. Returns `NautyReturn`.
 
-    densenauty(g::GraphType, options = optionblk()) where GraphType <: LightGraphs.AbstractGraph
+    densenauty(g::LightGraphs.SimpleGraph, options = DEFAULTOPTIONS_GRAPH)
+    densenauty(g::LightGraphs.SimpleDiGraph, options = DEFAULTOPTIONS_DIGRAPH)
 
 Equivalent to densenauty(lg_to_nauty(g), options).
+
+# Usage notes
+
+If you are calling this multiple times with smaller graphs, you may benefit from computing your `optionblk` just once:
+
+```julia
+o = Nauty.defaultoptions_graph()
+o.getcanon = 1
+o.writeautoms = 1
+o = optionblk(o) # This converts o from optionblk_mutable to optionblk
+
+results = [ Nauty.densenauty(g, o) for g in many_graphs ]
+```
+
+Note: Nauty is threadsafe, at least for normal use, so if you are calling it repeatedly with small graphs you may want to call it from multiple threads for a further speedup.
 """
 function densenauty(g::NautyGraph,
                     options = DEFAULTOPTIONS_GRAPH,
@@ -232,7 +94,7 @@ function densenauty(g::NautyGraph,
         partition = zero(labelling)
     end
 
-    # These don't need to be zero'd, I'm just doing it for debugging reasons.
+    #  don't need to be zero'd, I'm just doing it for debugging reasons.
     outgraph = zero(g)
     orbits = zero(labelling)
 
@@ -240,10 +102,22 @@ function densenauty(g::NautyGraph,
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{optionblk}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, options, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
-    return nautyreturn(outgraph, labelling, partition, orbits, stats)
+    return NautyReturn(outgraph, labelling, partition, orbits, stats)
 end
 
-function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
+function densenauty(g::LightGraphs.SimpleGraph, options = DEFAULTOPTIONS_GRAPH)
+    return densenauty(lg_to_nauty(g), options)
+end
+
+function densenauty(g::LightGraphs.SimpleDiGraph, options = DEFAULTOPTIONS_DIGRAPH)
+    return densenauty(lg_to_nauty(g), options)
+end
+
+
+# Older stuff
+# The baked functions are still slightly faster, but the difference is not very noticeable any more.
+
+function baked_canonical_form(g::LightGraphs.AbstractGraph)
     g = lg_to_nauty(g)
     (num_vertices, num_setwords) = (size(g, 1),size(g, 2))
     stats = statsblk()
@@ -259,10 +133,10 @@ function baked_canonical_form(g::GraphType) where GraphType <: LightGraphs.Abstr
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
-    return nautyreturn(outgraph, labelling, partition, orbits, stats)
+    return NautyReturn(outgraph, labelling, partition, orbits, stats)
 end
 
-function baked_canonical_form_color(g::GraphType,labelling, partition) where GraphType <: LightGraphs.AbstractGraph
+function baked_canonical_form_color(g::LightGraphs.AbstractGraph,labelling, partition)
     g = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(g, 1, 2)
     stats = statsblk()
@@ -275,10 +149,10 @@ function baked_canonical_form_color(g::GraphType,labelling, partition) where Gra
           (NautyGraphC, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ref{statsblk}, Cint, Cint, NautyGraphC), g, labelling, partition, orbits, stats, num_setwords, num_vertices, outgraph)
 
     # Return everything nauty gives us.
-    return nautyreturn(outgraph, labelling, partition, orbits, stats)
+    return NautyReturn(outgraph, labelling, partition, orbits, stats)
 end
 
-function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
+function baked_canonical_form_and_stats(g::LightGraphs.AbstractGraph)
     g = lg_to_nauty(g)
     (num_vertices, num_setwords) = size(g, 1, 2)
 
@@ -296,27 +170,23 @@ function baked_canonical_form_and_stats(g::GraphType) where GraphType <: LightGr
     return outgraph, labelling, partition, orbits
 end
 
-function densenauty(g::GraphType, options = DEFAULTOPTIONS_GRAPH) where GraphType <: LightGraphs.AbstractGraph
-    return densenauty(lg_to_nauty(g), options)
-end
-
+# Can probably remove this
 """
     canonical_form(g)
 
 Equivalent to:
 
-    m = optionblk_mutable()
-    m.getcanon = 1
-    densenauty(g, m)
+    o = defaultoptions_graph()
+    o.getcanon = 1
+    densenauty(g, o)
+
+Or:
+
+    densenauty(g, GETCANON_OPTIONS_GRAPH)
 
 Find the canonical graph, orbits, relabelling and orbits of `g`.
 """
-function canonical_form(g)
-    m = optionblk_mutable(DEFAULTOPTIONS_GRAPH)
-    m.getcanon = 1
-    m.digraph = 1
-    densenauty(g, optionblk(m))
-end
+canonical_form(g) = densenauty(g, GETCANON_OPTIONS_GRAPH)
 
 # {{{ Helpers
 
@@ -326,7 +196,7 @@ end
 
 Convert to nauty-compatible adjacency matrix (uint array).
 """
-function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
+function lg_to_nauty(g::LightGraphs.AbstractGraph)
     # Nauty compatible adjacency matrix:
     #   An array of m*n WORDSIZE bitfields.
     #   Where n = num vertices, m = num_setwords = ((n-1) / WORDSIZE) + 1
@@ -351,77 +221,41 @@ function lg_to_nauty(g::GraphType) where GraphType <: LightGraphs.AbstractGraph
 
     # nauty_graph as a vector of UInt64s, just what Nauty wants.
     # For the purposes of ccall, an Array{T} can be reasonably safely treated as Ptr{T}
-    return arr.chunks #, num_setwords, num_vertices
+    return arr.chunks
 end
 
-function fadjlist(g::GraphType) where GraphType <: LightGraphs.SimpleGraphs.AbstractSimpleGraph
-    return g.fadjlist
+function fadjlist(g::LightGraphs.SimpleGraphs.AbstractSimpleGraph)
+    return LightGraphs.SimpleGraphs.fadj(g)
 end
 
-import MetaGraphs
+function fadjlist(g::MetaGraphs.AbstractMetaGraph)
+    fadjlist(g.graph)
+end
 
-function fadjlist(g::GraphType) where GraphType <: MetaGraphs.AbstractMetaGraph
-    return g.graph.fadjlist
+# These are mislabeled, they actually take graphs
+"""
+    label_to_adj(g)
+
+Convert a nauty graph to an adjacency matrix.
+"""
+function label_to_adj(g::NautyGraph)
+    temp = BitArray(undef,WORDSIZE,size(g,1))
+    temp.chunks = g
+    temparr = Array{Int64,2}(temp[end-size(g,1)+1:end,:])
+    reverse(temparr', dims=2)
 end
 
 """
-    label_to_adj(label)
+    label_to_humanreadable(g::NautyGraph)
 
-Convert a nauty canonical label to an adjacency matrix.
+Convert a nauty graph (an array of little-endian UInt64s) to something more readable.
 """
-function label_to_adj(label)
-    temp = BitArray(undef,WORDSIZE,size(label,1))
-    temp.chunks = label
-    temparr = Array{Int64,2}(temp[end-size(label,1)+1:end,:])
-    flipdim(temparr',2)
-end
-
-"""
-    label_to_humanreadable(label::Array{UInt64})
-
-Convert a nauty label (an array of little-endian UInt64s) to something more readable.
-"""
-function label_to_humanreadable(label::Array{UInt64})
-    return @. Int128(hton(label))
+function label_to_humanreadable(g::NautyGraph)
+    return @. Int128(hton(g))
 end
 
 
 # }}}
-
-# Experimental crap to remove...
-function graph_receiver(g)
-    ingraph = lg_to_nauty(g)
-    (num_vertices, num_setwords) = size(ingraph, 1, 2)
-
-    ccall((:graph_receiver, LIB_FILE), UInt64, (NautyGraphC, Cint), ingraph, num_vertices * num_setwords)
-end
-
-#= # Fields =#
-
-#= type Field{K} end =#
-
-#= Base.convert{K}(::Type{Symbol}, ::Field{K}) = K =#
-#= Base.convert(::Type{Field}, s::Symbol) = Field{s}() =#
-
-#= macro f_str(s) =#
-#=   :(Field{$(Expr(:quote, symbol(s)))}()) =#
-#= end =#
-
-#= typealias FieldPair{F<:Field, T} Pair{F, T} =#
-#= const FieldPair{F<:Field, T} = Pair{F, T} =#
-
-#= # Immutable `with` =#
-
-#= for nargs = 1:5 =#
-#=   args = [symbol("p$i") for i = 1:nargs] =#
-#=   @eval with(x, $([:($p::FieldPair) for p = args]...), p::FieldPair) = =#
-#=       with(with(x, $(args...)), p) =#
-#= end =#
-
-#= @generated function with{F, T}(x, p::Pair{Field{F}, T}) =#
-#=   :($(x.name.primary)($([name == F ? :(p.second) : :(x.$name) =#
-#=                          for name in fieldnames(x)]...))) =#
-#= end =#
 
 function LightGraphs.Experimental.has_isomorph(alg::NautyAlg, g1::LightGraphs.AbstractGraph, g2::LightGraphs.AbstractGraph;
                          vertex_relation::Union{Cvoid, Function}=nothing,

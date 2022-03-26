@@ -13,7 +13,7 @@ end
 
 depsdir = joinpath(packagedir("Nauty"), "deps") 
 nautydir = joinpath(depsdir, "nauty26r7")
-nautyfiles = joinpath.(nautydir, ["nauty","nautil","naugraph", "schreier","naurng"] .* ".c")
+nautyfiles = joinpath.(nautydir, ["nauty", "nautil", "naugraph", "schreier", "naurng", "nautinv"] .* ".c")
 nautywrapper = joinpath(depsdir, "minnautywrap.c") 
 nautylib = joinpath(depsdir, "minnautywrap." * Libdl.dlext) 
 
