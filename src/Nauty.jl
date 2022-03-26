@@ -215,41 +215,6 @@ end
 
 # }}}
 
-# Experimental crap to remove...
-function graph_receiver(g)
-    ingraph = lg_to_nauty(g)
-    (num_vertices, num_setwords) = size(ingraph, 1, 2)
-
-    ccall((:graph_receiver, LIB_FILE), UInt64, (NautyGraphC, Cint), ingraph, num_vertices * num_setwords)
-end
-
-#= # Fields =#
-
-#= type Field{K} end =#
-
-#= Base.convert{K}(::Type{Symbol}, ::Field{K}) = K =#
-#= Base.convert(::Type{Field}, s::Symbol) = Field{s}() =#
-
-#= macro f_str(s) =#
-#=   :(Field{$(Expr(:quote, symbol(s)))}()) =#
-#= end =#
-
-#= typealias FieldPair{F<:Field, T} Pair{F, T} =#
-#= const FieldPair{F<:Field, T} = Pair{F, T} =#
-
-#= # Immutable `with` =#
-
-#= for nargs = 1:5 =#
-#=   args = [symbol("p$i") for i = 1:nargs] =#
-#=   @eval with(x, $([:($p::FieldPair) for p = args]...), p::FieldPair) = =#
-#=       with(with(x, $(args...)), p) =#
-#= end =#
-
-#= @generated function with{F, T}(x, p::Pair{Field{F}, T}) =#
-#=   :($(x.name.primary)($([name == F ? :(p.second) : :(x.$name) =#
-#=                          for name in fieldnames(x)]...))) =#
-#= end =#
-
 function LightGraphs.Experimental.has_isomorph(alg::NautyAlg, g1::LightGraphs.AbstractGraph, g2::LightGraphs.AbstractGraph;
                          vertex_relation::Union{Cvoid, Function}=nothing,
                          edge_relation::Union{Cvoid, Function}=nothing)::Bool
