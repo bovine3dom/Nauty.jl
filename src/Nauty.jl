@@ -26,6 +26,7 @@ const WORDSIZE = ccall((:wordsize, LIB_FILE), Int, ())
 
 # For small graphs, creating the optionblk may take as long as finding the
 # canonical form, so we do that work in advance.
+# Sometimes these can cause problems because the constant in Julia's compiletime cache can become out of date with the built artifact.
 const DEFAULTOPTIONS_GRAPH = optionblk(defaultoptions_graph())
 const DEFAULTOPTIONS_DIGRAPH = optionblk(defaultoptions_digraph())
 const GETCANON_OPTIONS_GRAPH = let
